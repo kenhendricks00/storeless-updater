@@ -12,6 +12,7 @@ mod installer;
 mod junction;
 mod launcher_update;
 mod mode;
+mod package;
 mod path_dialog;
 mod proxy;
 mod registry;

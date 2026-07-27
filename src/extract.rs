@@ -14,12 +14,14 @@
 //! so a crash mid-extract never leaves a half-populated directory that
 //! looks valid to the proxy launcher.
 
-use anyhow::{bail, Context, Result};
+use crate::package;
+use anyhow::{bail, ensure, Context, Result};
 use std::fs;
-use std::io;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
 const APP_PREFIX: &str = "app/";
+pub const PORTABLE_MANIFEST_FILE: &str = ".appx-manifest.xml";
 
 /// Extract the `app/` subtree from `msix_path` into
 /// `<install_root>/versions/<version>/`. Any pre-existing directory at that
@@ -37,16 +39,24 @@ pub fn extract_app(
     let final_dir = versions_dir.join(version);
     let partial_dir = versions_dir.join(format!("{version}.partial"));
 
+    let file =
+        fs::File::open(msix_path).with_context(|| format!("opening {}", msix_path.display()))?;
+    let mut zip = zip::ZipArchive::new(file)
+        .with_context(|| format!("reading {} as zip", msix_path.display()))?;
+    let manifest = read_manifest(&mut zip)?;
+    let package = package::parse_and_validate_manifest(&manifest)?;
+    ensure!(
+        package.version == version,
+        "package version {} does not match expected version {version}",
+        package.version
+    );
+
     if partial_dir.exists() {
         fs::remove_dir_all(&partial_dir)
             .with_context(|| format!("clearing stale {}", partial_dir.display()))?;
     }
     fs::create_dir_all(&partial_dir)?;
-
-    let file =
-        fs::File::open(msix_path).with_context(|| format!("opening {}", msix_path.display()))?;
-    let mut zip = zip::ZipArchive::new(file)
-        .with_context(|| format!("reading {} as zip", msix_path.display()))?;
+    fs::write(partial_dir.join(PORTABLE_MANIFEST_FILE), &manifest)?;
 
     // First pass: count app/ entries so progress has a total.
     let mut total_app_entries: u64 = 0;
@@ -94,6 +104,13 @@ pub fn extract_app(
         progress(done, Some(total_app_entries));
     }
 
+    let executable = partial_dir.join(&package.executable);
+    ensure!(
+        executable.is_file(),
+        "manifest executable was not extracted: {}",
+        executable.display()
+    );
+
     if final_dir.exists() {
         fs::remove_dir_all(&final_dir)
             .with_context(|| format!("removing old {}", final_dir.display()))?;
@@ -106,15 +123,18 @@ pub fn extract_app(
         )
     })?;
 
-    let codex_exe = final_dir.join("Codex.exe");
-    if !codex_exe.exists() {
-        bail!(
-            "extracted tree has no Codex.exe at {} — MSIX layout changed?",
-            codex_exe.display()
-        );
-    }
-
     Ok(final_dir)
+}
+
+fn read_manifest(zip: &mut zip::ZipArchive<fs::File>) -> Result<String> {
+    let mut entry = zip
+        .by_name("AppxManifest.xml")
+        .context("MSIX has no AppxManifest.xml")?;
+    let mut manifest = String::new();
+    entry
+        .read_to_string(&mut manifest)
+        .context("AppxManifest.xml is not valid UTF-8")?;
+    Ok(manifest)
 }
 
 /// Reject absolute paths, drive letters, and `..` traversal. ZIP entries
@@ -210,4 +230,85 @@ fn parse_version(s: &str) -> Vec<u64> {
     s.split('.')
         .map(|p| p.parse::<u64>().unwrap_or(0))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use zip::write::SimpleFileOptions;
+
+    const MANIFEST: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+  <Identity Name="OpenAI.Codex" ProcessorArchitecture="x64" Version="26.721.4979.0" Publisher="CN=50BDFD77-8903-4850-9FFE-6E8522F64D5B" />
+  <Applications>
+    <Application Id="App" Executable="app/ChatGPT.exe" EntryPoint="Windows.FullTrustApplication" />
+  </Applications>
+</Package>"#;
+
+    #[test]
+    fn extracts_current_chatgpt_payload() {
+        let sandbox = TestSandbox::new();
+        let msix = sandbox.write_msix(MANIFEST);
+
+        let extracted = extract_app(&msix, &sandbox.root, "26.721.4979.0", &mut |_, _| {}).unwrap();
+
+        assert!(extracted.join("ChatGPT.exe").is_file());
+        assert!(extracted.join("resources/app.asar").is_file());
+    }
+
+    #[test]
+    fn rejects_wrong_identity_before_promoting_version() {
+        let sandbox = TestSandbox::new();
+        let imposter = MANIFEST.replace("OpenAI.Codex", "Example.Imposter");
+        let msix = sandbox.write_msix(&imposter);
+
+        let error = extract_app(&msix, &sandbox.root, "26.721.4979.0", &mut |_, _| {}).unwrap_err();
+
+        assert!(error.to_string().contains("unexpected package identity"));
+        assert!(!sandbox.root.join("versions/26.721.4979.0").exists());
+    }
+
+    struct TestSandbox {
+        root: PathBuf,
+    }
+
+    impl TestSandbox {
+        fn new() -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let root = std::env::temp_dir().join(format!(
+                "chatgpt-portable-extract-test-{}-{unique}",
+                std::process::id()
+            ));
+            fs::create_dir_all(&root).unwrap();
+            Self { root }
+        }
+
+        fn write_msix(&self, manifest: &str) -> PathBuf {
+            let path = self.root.join("fixture.msix");
+            let file = fs::File::create(&path).unwrap();
+            let mut archive = zip::ZipWriter::new(file);
+            let options = SimpleFileOptions::default();
+            archive.start_file("AppxManifest.xml", options).unwrap();
+            archive.write_all(manifest.as_bytes()).unwrap();
+            archive.start_file("app/ChatGPT.exe", options).unwrap();
+            archive.write_all(b"fixture executable").unwrap();
+            archive
+                .start_file("app/resources/app.asar", options)
+                .unwrap();
+            archive.write_all(b"fixture resources").unwrap();
+            archive.finish().unwrap();
+            path
+        }
+    }
+
+    impl Drop for TestSandbox {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.root);
+        }
+    }
 }
