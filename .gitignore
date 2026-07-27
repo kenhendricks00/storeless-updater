@@ -1,3 +1,6 @@
 /target
+/dist
+/downloads
+/versions
 *.pdb
 /sync_dump.xml

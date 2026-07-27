@@ -28,29 +28,29 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build (release)
-        run: cargo build --release
+        run: cargo build --locked --release
 
       - name: Stage artifact
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item target/release/codex-launcher.exe dist/codex-launcher.exe
-          $hash = (Get-FileHash dist/codex-launcher.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  codex-launcher.exe" | Out-File -FilePath dist/codex-launcher.exe.sha256 -Encoding ASCII -NoNewline
+          Copy-Item target/release/chatgpt-portable.exe dist/chatgpt-portable.exe
+          $hash = (Get-FileHash dist/chatgpt-portable.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  chatgpt-portable.exe" | Out-File -FilePath dist/chatgpt-portable.exe.sha256 -Encoding ASCII -NoNewline
           Write-Host "SHA-256: $hash"
 
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: dist/codex-launcher.exe
+          subject-path: dist/chatgpt-portable.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           files: |
-            dist/codex-launcher.exe
-            dist/codex-launcher.exe.sha256
+            dist/chatgpt-portable.exe
+            dist/chatgpt-portable.exe.sha256
           body: |
             ## Verifying this build
 
@@ -59,7 +59,7 @@ jobs:
             binary you downloaded matches the one this workflow produced:
 
             ```
-            gh attestation verify codex-launcher.exe --owner vaportail
+            gh attestation verify chatgpt-portable.exe --repo ${{ github.repository }}
             ```
 
-            SHA-256 of the published binary is in `codex-launcher.exe.sha256`.
+            SHA-256 of the published binary is in `chatgpt-portable.exe.sha256`.

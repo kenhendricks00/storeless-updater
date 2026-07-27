@@ -3,10 +3,10 @@
 //! MSIX is a ZIP archive. The Electron app we care about lives under the
 //! `app/` prefix; everything else (AppxManifest.xml, AppxBlockMap.xml,
 //! AppxSignature.p7x, Assets/, resources.pri, ...) is Store packaging
-//! metadata we don't need to run Codex standalone.
+//! metadata we don't need to run ChatGPT standalone.
 //!
 //! Layout produced:
-//!   <install_root>/versions/<version>/Codex.exe
+//!   <install_root>/versions/<version>/ChatGPT.exe
 //!   <install_root>/versions/<version>/resources/app.asar
 //!   ...
 //!

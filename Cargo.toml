@@ -1,17 +1,17 @@
 [package]
-name = "codex-updater"
-version = "0.1.2"
+name = "chatgpt-portable"
+version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
-description = "Unofficial installer/updater for the Codex Windows app"
+rust-version = "1.88"
+description = "Unofficial portable installer and updater for the ChatGPT Windows app"
 license = "MIT"
 
 [[bin]]
-name = "codex-launcher"
+name = "chatgpt-portable"
 path = "src/main.rs"
 
 [dependencies]
-slint = "1.8"
+slint = "1.16.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
@@ -44,7 +44,7 @@ windows = { version = "0.58", features = [
 ]}
 
 [build-dependencies]
-slint-build = "1.8"
+slint-build = "1.16.1"
 
 [target.'cfg(windows)'.build-dependencies]
 winresource = "0.1"

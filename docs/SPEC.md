@@ -11,14 +11,14 @@ The launcher does not redistribute ChatGPT, bypass authentication, alter OpenAI 
 1. Windows 10 version 2004 (build 19041) or newer, x64 only.
 2. Portable mode is the primary experience and needs no administrator rights, registry entry, background service, or Store client.
 3. Updates are checked when the launcher runs, with a user-visible choice before replacing the active version.
-4. Microsoft DisplayCatalog, Windows Update FE3, and Microsoft delivery CDN are the only package sources.
+4. Microsoft DisplayCatalog, Windows Update FE3, and the allowlisted Microsoft delivery CDN are the only package sources. The CDN may use the signed HTTP URL currently returned by FE3; package authenticity is enforced with Windows signature verification before extraction.
 5. Product ID `9PLM9XGG6VKS`, package identity `OpenAI.Codex`, publisher `CN=50BDFD77-8903-4850-9FFE-6E8522F64D5B`, and x64 architecture are fixed trust constraints.
 6. The executable path is read from `AppxManifest.xml`; the current manifest points to `app/ChatGPT.exe`.
 7. User data remains in the application's normal `%APPDATA%` and `%LOCALAPPDATA%` locations so credentials are not copied between machines.
 
 ## Tech stack
 
-- Rust 2021 with Rust 1.80 minimum
+- Rust 2021 with Rust 1.88 minimum
 - Slint for the native Windows wizard
 - `reqwest` with native-root TLS for Microsoft HTTPS calls
 - `quick-xml` and `serde_json` for catalog responses
@@ -110,4 +110,3 @@ Run `cargo fmt`; prefer descriptive names, `Result` propagation with context, an
 ## Open questions
 
 None. The user delegated product decisions and approved proceeding with the recommended defaults.
-

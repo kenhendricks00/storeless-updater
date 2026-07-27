@@ -26,7 +26,7 @@ use windows::Win32::UI::Shell::{
 /// Required signature (all must hold):
 /// - `root/updater.json` exists and is a file
 /// - `root/versions/` exists and is a directory
-/// - `root/codex-launcher.exe` exists and is a file
+/// - `root/chatgpt-portable.exe` exists and is a file
 /// - `root` canonicalized is not equal to any Known Folder (user profile,
 ///   Desktop, Documents, Downloads, AppData, Program Files, Windows, etc.)
 /// - `root` is not a drive root (e.g. `C:\`)
@@ -49,9 +49,9 @@ pub fn validate_uninstall_root(root: &Path) -> Result<()> {
             root.display()
         );
     }
-    if !root.join("codex-launcher.exe").is_file() {
+    if !root.join("chatgpt-portable.exe").is_file() {
         bail!(
-            "refusing to uninstall: {} missing codex-launcher.exe",
+            "refusing to uninstall: {} missing chatgpt-portable.exe",
             root.display()
         );
     }

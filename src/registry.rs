@@ -17,7 +17,7 @@ use windows::Win32::System::Registry::{
 };
 
 pub const UNINSTALL_SUBKEY: &str =
-    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\CodexUnofficialUpdater";
+    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ChatGPTPortable";
 
 fn root(mode: InstallMode) -> HKEY {
     match mode {

@@ -71,7 +71,7 @@ pub(super) fn resolve_latest_version(product_id: &str) -> Result<String> {
         let candidates =
             parse_package_candidates(&sync_xml).context("Parsing SyncUpdates response failed")?;
         let best = pick_best_candidate(&candidates)
-            .ok_or_else(|| anyhow!("no x64 Codex candidate in SyncUpdates response"))?;
+            .ok_or_else(|| anyhow!("no x64 ChatGPT candidate in SyncUpdates response"))?;
         let version = moniker_version(&best.moniker)
             .ok_or_else(|| anyhow!("couldn't parse version from moniker: {}", best.moniker))?
             .to_string();
@@ -99,7 +99,7 @@ fn resolve_url(product_id: &str) -> Result<(String, String, String)> {
     let candidates =
         parse_package_candidates(&sync_xml).context("Parsing SyncUpdates response failed")?;
     let best = pick_best_candidate(&candidates)
-        .ok_or_else(|| anyhow!("no x64 Codex candidate in SyncUpdates response"))?;
+        .ok_or_else(|| anyhow!("no x64 ChatGPT candidate in SyncUpdates response"))?;
     let version = moniker_version(&best.moniker)
         .ok_or_else(|| anyhow!("couldn't parse version from moniker: {}", best.moniker))?
         .to_string();
@@ -112,8 +112,13 @@ fn resolve_url(product_id: &str) -> Result<(String, String, String)> {
 }
 
 fn download_url(url: &str, dest: &Path, progress: &mut dyn FnMut(u64, Option<u64>)) -> Result<()> {
-    let client = http_client()?;
+    let client = download_client()?;
     let mut resp = client.get(url).send()?.error_for_status()?;
+    ensure!(
+        is_trusted_delivery_url(resp.url()),
+        "package response used an untrusted URL: {}",
+        resp.url()
+    );
     let total = resp.content_length();
     let mut file = std::fs::File::create(dest)?;
     let mut buf = [0u8; 64 * 1024];
@@ -136,6 +141,24 @@ fn download_url(url: &str, dest: &Path, progress: &mut dyn FnMut(u64, Option<u64
 fn http_client() -> Result<Client> {
     Ok(Client::builder()
         .timeout(Duration::from_secs(120))
+        .redirect(reqwest::redirect::Policy::none())
+        .user_agent("Windows-Update-Agent/10.0.10011.16384 Client-Protocol/1.40")
+        .build()?)
+}
+
+fn download_client() -> Result<Client> {
+    Ok(Client::builder()
+        .timeout(Duration::from_secs(120))
+        .redirect(reqwest::redirect::Policy::custom(|attempt| {
+            if attempt.previous().len() >= 10 {
+                return attempt.error("too many package download redirects");
+            }
+            if is_trusted_delivery_url(attempt.url()) {
+                attempt.follow()
+            } else {
+                attempt.error("package download redirected outside Microsoft's delivery domain")
+            }
+        }))
         .user_agent("Windows-Update-Agent/10.0.10011.16384 Client-Protocol/1.40")
         .build()?)
 }
@@ -244,7 +267,7 @@ fn pick_msix_url(urls: &[String]) -> Option<String> {
 }
 
 fn normalize_delivery_url(raw: &str) -> Result<reqwest::Url> {
-    let mut url = reqwest::Url::parse(raw).context("invalid delivery URL")?;
+    let url = reqwest::Url::parse(raw).context("invalid delivery URL")?;
     ensure!(
         matches!(url.scheme(), "http" | "https"),
         "unsupported delivery URL scheme: {}",
@@ -266,15 +289,25 @@ fn normalize_delivery_url(raw: &str) -> Result<reqwest::Url> {
         url.port().is_none() || matches!(url.port(), Some(80 | 443)),
         "unsupported delivery URL port"
     );
-    if url.scheme() == "http" {
-        url.set_scheme("https")
-            .map_err(|_| anyhow!("could not upgrade delivery URL to HTTPS"))?;
-        if url.port() == Some(80) {
-            url.set_port(None)
-                .map_err(|_| anyhow!("could not remove insecure delivery URL port"))?;
-        }
-    }
     Ok(url)
+}
+
+fn is_trusted_delivery_url(url: &reqwest::Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    matches!(url.scheme(), "http" | "https")
+        && (host.eq_ignore_ascii_case("delivery.mp.microsoft.com")
+            || host
+                .to_ascii_lowercase()
+                .ends_with(".delivery.mp.microsoft.com"))
+        && url.username().is_empty()
+        && url.password().is_none()
+        && match url.scheme() {
+            "http" => matches!(url.port(), None | Some(80)),
+            "https" => matches!(url.port(), None | Some(443)),
+            _ => false,
+        }
 }
 
 fn moniker_version(moniker: &str) -> Option<&str> {
@@ -473,13 +506,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn microsoft_delivery_url_is_upgraded_to_https() {
+    fn microsoft_delivery_http_url_is_accepted_without_rewriting() {
         let url = normalize_delivery_url(
             "http://tlu.dl.delivery.mp.microsoft.com/filestreamingservice/files/example",
         )
         .unwrap();
 
-        assert_eq!(url.scheme(), "https");
+        assert_eq!(url.scheme(), "http");
         assert_eq!(url.host_str(), Some("tlu.dl.delivery.mp.microsoft.com"));
     }
 
@@ -500,5 +533,25 @@ mod tests {
         assert!(error
             .to_string()
             .contains("unsupported delivery URL scheme"));
+    }
+
+    #[test]
+    fn redirect_policy_accepts_only_trusted_delivery_urls() {
+        let trusted_https = reqwest::Url::parse(
+            "https://tlu.dl.delivery.mp.microsoft.com/filestreamingservice/files/example",
+        )
+        .unwrap();
+        let trusted_http = reqwest::Url::parse(
+            "http://tlu.dl.delivery.mp.microsoft.com/filestreamingservice/files/example",
+        )
+        .unwrap();
+        let lookalike = reqwest::Url::parse(
+            "https://tlu.dl.delivery.mp.microsoft.com.example.test/payload.msix",
+        )
+        .unwrap();
+
+        assert!(is_trusted_delivery_url(&trusted_https));
+        assert!(is_trusted_delivery_url(&trusted_http));
+        assert!(!is_trusted_delivery_url(&lookalike));
     }
 }

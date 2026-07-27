@@ -83,7 +83,7 @@ impl CleanupReport {
     pub fn to_log_string(&self, root: &Path) -> String {
         use std::fmt::Write as _;
         let mut out = String::new();
-        out.push_str("Codex uninstaller cleanup report\n");
+        out.push_str("ChatGPT Portable uninstaller cleanup report\n");
         let _ = writeln!(out, "Install root: {}", root.display());
         let _ = writeln!(out, "Deleted: {} entries", self.deleted.len());
         for p in &self.deleted {
@@ -259,7 +259,7 @@ fn spawn_cmd_self_delete(exe: &Path) -> std::io::Result<()> {
     const DETACHED_PROCESS: u32 = 0x0000_0008;
 
     let bat_path = std::env::temp_dir().join(format!(
-        "codex-launcher-selfdelete-{}.bat",
+        "chatgpt-portable-selfdelete-{}.bat",
         std::process::id()
     ));
     // Escape `%` -> `%%` (batch literal) so paths like `C:\X\%foo%\app.exe`

@@ -87,7 +87,7 @@ component ModeCard inherits Rectangle {
 export component AppWindow inherits Window {
     // Wizard state (bound both ways — UI writes, Rust reads at install time).
     in-out property <int> current-screen: 0;
-    in-out property <int> install-mode: 1; // 0=portable 1=user 2=system
+    in-out property <int> install-mode: 0; // 0=portable 1=user 2=system
     in-out property <string> install-path;
     in-out property <bool> create-shortcut: true;
     in-out property <bool> register-uninstall: true;
@@ -138,7 +138,7 @@ export component AppWindow inherits Window {
     // 6=ApplyUpdate (download + replace running launcher).
     callback request-launcher-action(int);
 
-    title: "Codex Updater";
+    title: "ChatGPT Portable";
     width: 580px;
     height: 420px;
     background: #1e1e2e;
@@ -156,7 +156,7 @@ export component AppWindow inherits Window {
         HorizontalBox {
             padding: 0px;
             Text {
-                text: "Codex Updater";
+                text: "ChatGPT Portable";
                 font-size: 20px;
                 font-weight: 700;
                 color: #cdd6f4;
@@ -167,7 +167,7 @@ export component AppWindow inherits Window {
                       root.current-screen == 11 ? "Checking for updates" :
                       root.current-screen == 12 ? "Update available" :
                       root.current-screen == 13 ? "Up to date" :
-                      root.current-screen == 20 ? "Uninstall Codex" :
+                      root.current-screen == 20 ? "Uninstall ChatGPT" :
                       root.current-screen == 21 ? "Uninstalling…" :
                       root.current-screen == 22 ? "Uninstall complete" :
                       root.current-screen == 23 ? "Uninstall failed" :
@@ -194,13 +194,13 @@ export component AppWindow inherits Window {
             if root.current-screen == 0 : VerticalBox {
                 spacing: 10px;
                 Text {
-                    text: "Unofficial installer for the OpenAI Codex desktop app.";
+                    text: "Unofficial portable installer for the official ChatGPT desktop app.";
                     color: #cdd6f4;
                     font-size: 14px;
                     wrap: word-wrap;
                 }
                 Text {
-                    text: "Downloads the official Microsoft Store package directly and extracts it — no Store app required.";
+                    text: "Downloads Microsoft's signed package directly, verifies it, and extracts it. The Microsoft Store app is not required.";
                     color: #a6adc8;
                     font-size: 12px;
                     wrap: word-wrap;
@@ -213,25 +213,25 @@ export component AppWindow inherits Window {
             if root.current-screen == 1 : VerticalBox {
                 spacing: 8px;
                 Text {
-                    text: "Where should Codex be installed?";
+                    text: "Where should ChatGPT be installed?";
                     color: #cdd6f4;
                     font-size: 14px;
                 }
                 ModeCard {
-                    title: "Portable";
+                    title: "Portable  (recommended)";
                     subtitle: "Self-contained folder. No registry, no shortcuts unless you add them.";
                     selected: root.install-mode == 0;
                     clicked => { root.install-mode = 0; root.mode-selected(0); }
                 }
                 ModeCard {
-                    title: "User install  (recommended)";
-                    subtitle: "%LOCALAPPDATA%\\Codex — no admin required.";
+                    title: "User install";
+                    subtitle: "%LOCALAPPDATA%\\ChatGPT Portable — no admin required.";
                     selected: root.install-mode == 1;
                     clicked => { root.install-mode = 1; root.mode-selected(1); }
                 }
                 ModeCard {
                     title: "System install";
-                    subtitle: "C:\\Program Files\\Codex — requires admin, shared across users.";
+                    subtitle: "C:\\Program Files\\ChatGPT Portable — requires admin, shared across users.";
                     selected: root.install-mode == 2;
                     clicked => { root.install-mode = 2; root.mode-selected(2); }
                 }
@@ -345,7 +345,7 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Rectangle { vertical-stretch: 1; }
                 Text {
-                    text: "Codex is installed.";
+                    text: "ChatGPT is installed.";
                     color: #a6e3a1;
                     font-size: 18px;
                     font-weight: 700;
@@ -415,7 +415,7 @@ export component AppWindow inherits Window {
                     }
                 }
                 Text {
-                    text: "Contacting the Microsoft Store…";
+                    text: "Contacting Microsoft's package catalog…";
                     color: #a6adc8;
                     font-size: 12px;
                     horizontal-alignment: center;
@@ -427,7 +427,7 @@ export component AppWindow inherits Window {
             if root.current-screen == 12 : VerticalBox {
                 spacing: 10px;
                 Text {
-                    text: "A new version of Codex is available.";
+                    text: "A new version of ChatGPT is available.";
                     color: #cdd6f4;
                     font-size: 15px;
                     font-weight: 600;
@@ -480,7 +480,7 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Rectangle { vertical-stretch: 1; }
                 Text {
-                    text: "Codex is up to date.";
+                    text: "ChatGPT is up to date.";
                     color: #a6e3a1;
                     font-size: 16px;
                     font-weight: 700;
@@ -499,19 +499,19 @@ export component AppWindow inherits Window {
             if root.current-screen == 20 : VerticalBox {
                 spacing: 12px;
                 Text {
-                    text: "Uninstall Codex?";
+                    text: "Uninstall ChatGPT?";
                     color: #cdd6f4;
                     font-size: 16px;
                     font-weight: 700;
                 }
                 Text {
-                    text: "This will remove the launcher, Start Menu shortcut, and all installed versions of Codex.";
+                    text: "This will remove the launcher, Start Menu shortcut, and all installed versions of ChatGPT.";
                     color: #a6adc8;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
                 Text {
-                    text: "Your Codex logs and sign-in data will NOT be deleted.";
+                    text: "Your ChatGPT logs and sign-in data will NOT be deleted.";
                     color: #94e2d5;
                     font-size: 12px;
                     wrap: word-wrap;
@@ -560,7 +560,7 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Rectangle { vertical-stretch: 1; }
                 Text {
-                    text: "Codex has been uninstalled.";
+                    text: "ChatGPT has been uninstalled.";
                     color: #a6e3a1;
                     font-size: 16px;
                     font-weight: 700;
@@ -680,7 +680,7 @@ export component AppWindow inherits Window {
                     horizontal-alignment: center;
                 }
                 Text {
-                    text: "Close this window to finish. The new launcher will be used the next time you start Codex.";
+                    text: "Close this window to finish. The new launcher will be used the next time you start ChatGPT.";
                     color: #a6adc8;
                     font-size: 12px;
                     horizontal-alignment: center;
@@ -731,7 +731,7 @@ export component AppWindow inherits Window {
                 clicked => { root.current-screen = 4; root.request-install(); }
             }
             if root.current-screen == 5 : DarkButton {
-                text: "Launch Codex";
+                text: "Launch ChatGPT";
                 primary: true;
                 clicked => { root.request-launch(); }
             }

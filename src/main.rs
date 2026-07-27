@@ -48,14 +48,20 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Best-effort cleanup of a half-written `codex-launcher.new.exe` from a
-    // prior interrupted self-update. `codex-launcher.old.exe` is preserved
+    // Best-effort cleanup of a half-written `chatgpt-portable.new.exe` from a
+    // prior interrupted self-update. `chatgpt-portable.old.exe` is preserved
     // as the manual-rollback artifact.
-    launcher_update::cleanup_stale_new_launcher();
+    if updater::launcher_self_update_enabled() {
+        launcher_update::cleanup_stale_new_launcher();
+    }
 
     // Elevated re-spawn from the launcher self-update path. Skip mode
     // detection entirely — we just need to download/swap and exit.
     if let Some(target) = parse_string_flag(&args, "--auto-self-update") {
+        anyhow::ensure!(
+            updater::launcher_self_update_enabled(),
+            "launcher self-update is not configured for this build"
+        );
         return run_auto_self_update(&target);
     }
 
@@ -270,7 +276,7 @@ fn run_proxy(
                         let msg = format!("launch failed: {e:#}");
                         log_event(&msg);
                         dialogs::error(&format!(
-                            "Could not launch Codex.\n\n{msg}\n\nLog: {}",
+                            "Could not launch ChatGPT.\n\n{msg}\n\nLog: {}",
                             launcher_log_display()
                         ));
                     }
@@ -306,7 +312,7 @@ fn parse_auto_install(args: &[String]) -> Option<AutoInstall> {
     let mode = match parse_string_flag(args, "--mode").as_deref() {
         Some("portable") => InstallMode::Portable,
         Some("system") => InstallMode::System,
-        _ => InstallMode::User,
+        _ => InstallMode::Portable,
     };
     let root = parse_string_flag(args, "--path")
         .map(std::path::PathBuf::from)
@@ -394,7 +400,7 @@ fn wire_installer_ui(
     let default_mode = auto
         .as_ref()
         .map(|a| a.opts.mode)
-        .unwrap_or(InstallMode::User);
+        .unwrap_or(InstallMode::Portable);
     ui.set_current_screen(0);
     ui.set_install_mode(install_mode_to_int(default_mode));
     ui.set_install_path(
@@ -510,7 +516,7 @@ fn wire_installer_ui(
                 let msg = format!("post-install launch failed: {e:#}");
                 log_event(&msg);
                 dialogs::error(&format!(
-                    "Could not launch Codex.\n\n{msg}\n\nLog: {}",
+                    "Could not launch ChatGPT.\n\n{msg}\n\nLog: {}",
                     launcher_log_display()
                 ));
             }
@@ -575,7 +581,7 @@ fn run_uninstall_ui() -> anyhow::Result<()> {
         Err(e) => {
             dialogs::error(&format!(
                 "Couldn't read install state: {e:#}\n\n\
-                 This launcher doesn't appear to be a valid Codex install. \
+                 This launcher doesn't appear to be a valid ChatGPT Portable install. \
                  No action taken."
             ));
             return Ok(());
@@ -1133,21 +1139,21 @@ fn prompt_kill_codex_for(action: &str) -> bool {
         return true;
     }
     let msg = format!(
-        "Codex is currently running ({} process{}). It must be closed before \
+        "ChatGPT is currently running ({} process{}). It must be closed before \
          {action}.\n\n\
          Terminate it and continue?\n\n\
          Click No to cancel. No files have been modified yet.",
         pids.len(),
         if pids.len() == 1 { "" } else { "es" },
     );
-    if !dialogs::yes_no("Codex is running", &msg) {
+    if !dialogs::yes_no("ChatGPT is running", &msg) {
         return false;
     }
     proxy::terminate_pids(&pids, 5000);
     let still = proxy::find_codex_pids();
     if !still.is_empty() {
         dialogs::error(&format!(
-            "Failed to terminate {} Codex process(es). Aborting.",
+            "Failed to terminate {} ChatGPT process(es). Aborting.",
             still.len()
         ));
         return false;
@@ -1377,7 +1383,7 @@ fn newest_numeric_version(versions: &std::path::Path) -> Option<(String, std::pa
 /// Fallback string used in user-facing messages when `LOCALAPPDATA` is
 /// unexpectedly unset. Mirrors the resolved path's shape so users can
 /// still find the directory if needed.
-const LAUNCHER_LOG_PATH_FALLBACK: &str = "%LOCALAPPDATA%\\codex-launcher\\launcher.log";
+const LAUNCHER_LOG_PATH_FALLBACK: &str = "%LOCALAPPDATA%\\chatgpt-portable\\launcher.log";
 
 /// Per-user log location, always writable regardless of install mode
 /// (System installs to Program Files can't write next to the launcher exe
@@ -1387,7 +1393,7 @@ fn launcher_log_path() -> Option<std::path::PathBuf> {
     let base = std::env::var("LOCALAPPDATA").ok()?;
     Some(
         std::path::PathBuf::from(base)
-            .join("codex-launcher")
+            .join("chatgpt-portable")
             .join("launcher.log"),
     )
 }
@@ -1458,10 +1464,10 @@ fn run_debug_singleton(user_data_dir: Option<String>) -> anyhow::Result<()> {
     let udd = match user_data_dir.map(std::path::PathBuf::from) {
         Some(p) => p,
         None => proxy::codex_user_data_dir().ok_or_else(|| {
-            anyhow::anyhow!("could not derive Codex userData path (set APPDATA?)")
+            anyhow::anyhow!("could not derive ChatGPT userData path (set APPDATA?)")
         })?,
     };
-    println!("Probing Codex singleton with userData: {}", udd.display());
+    println!("Probing ChatGPT singleton with userData: {}", udd.display());
 
     match proxy::find_singleton_holder(&udd) {
         Some(holder) => {
@@ -1470,7 +1476,7 @@ fn run_debug_singleton(user_data_dir: Option<String>) -> anyhow::Result<()> {
             println!("  Image path: {}", holder.image_path.display());
         }
         None => {
-            println!("Singleton is NOT held — no responsive Codex main process found.");
+            println!("Singleton is NOT held — no responsive ChatGPT main process found.");
             println!("(Spawning would create a fresh main; orphan child processes do not");
             println!(" count because their parent's message pump is dead.)");
         }
@@ -1495,7 +1501,7 @@ fn run_dump_sync() -> anyhow::Result<()> {
 fn run_test_download(fetcher: Fetcher, msix_path: Option<&std::path::Path>) -> anyhow::Result<()> {
     let dest = std::path::PathBuf::from("test_download");
     std::fs::create_dir_all(&dest)?;
-    println!("Downloading latest Codex MSIX via {:?}...", fetcher);
+    println!("Downloading latest ChatGPT MSIX via {:?}...", fetcher);
     let mut last_logged = 0u64;
     let mut progress = |done: u64, total: Option<u64>| {
         if done - last_logged >= 5 * 1024 * 1024 || total.map(|t| done == t).unwrap_or(false) {

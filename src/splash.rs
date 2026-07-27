@@ -34,7 +34,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WM_PAINT, WM_TIMER, WNDCLASSEXW, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_TOPMOST, WS_POPUP,
 };
 
-const CLASS_NAME: PCWSTR = w!("CodexUpdaterSplash");
+const CLASS_NAME: PCWSTR = w!("ChatGPTPortableSplash");
 const TIMER_ID: usize = 1;
 const TIMER_MS: u32 = 16;
 const WM_SET_STATUS: u32 = WM_APP + 1;
@@ -107,7 +107,7 @@ thread_local! {
     static HICON_PTR: Cell<isize> = const { Cell::new(0) };
     static BAR_OFFSET: Cell<i32> = const { Cell::new(0) };
     static SCALE: Cell<f32> = const { Cell::new(1.0) };
-    static STATUS_TEXT: RefCell<String> = RefCell::new("Loading Codex...".to_string());
+    static STATUS_TEXT: RefCell<String> = RefCell::new("Loading ChatGPT...".to_string());
 }
 
 unsafe fn run_splash(codex_exe: Option<&Path>, tx: mpsc::Sender<usize>) {
@@ -149,7 +149,7 @@ unsafe fn run_splash(codex_exe: Option<&Path>, tx: mpsc::Sender<usize>) {
     let hwnd = CreateWindowExW(
         WS_EX_LAYERED | WS_EX_APPWINDOW | WS_EX_TOPMOST,
         CLASS_NAME,
-        w!("Codex"),
+        w!("ChatGPT"),
         WS_POPUP,
         x,
         y,
@@ -290,7 +290,7 @@ unsafe fn paint_content(hdc: HDC, scale: f32) {
 
     SetBkMode(hdc, TRANSPARENT);
 
-    // "Codex" wordmark.
+    // "ChatGPT" wordmark.
     let title_y = icon_y + icon_sz + scaled(10);
     let title_h = scaled(28);
     let title_font = CreateFontW(
@@ -311,7 +311,7 @@ unsafe fn paint_content(hdc: HDC, scale: f32) {
     );
     let prev_font = SelectObject(hdc, HGDIOBJ(title_font.0));
     SetTextColor(hdc, COLORREF(COLOR_TEXT));
-    let mut title: Vec<u16> = "Codex".encode_utf16().collect();
+    let mut title: Vec<u16> = "ChatGPT".encode_utf16().collect();
     let mut title_rect = RECT {
         left: 0,
         top: title_y,

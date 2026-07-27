@@ -111,27 +111,27 @@ pub fn run_worker(ctx: UninstallContext, on_msg: impl Fn(UninstallMsg)) {
     let pids = proxy::find_our_codex_pids(&versions_root);
     if !pids.is_empty() {
         let msg = format!(
-            "Codex is currently running ({} process{}).\n\n\
+            "ChatGPT is currently running ({} process{}).\n\n\
              Terminate it and continue uninstalling?\n\n\
              Click No to cancel. No files have been modified yet.",
             pids.len(),
             if pids.len() == 1 { "" } else { "es" }
         );
-        if !dialogs::yes_no("Codex is running", &msg) {
+        if !dialogs::yes_no("ChatGPT is running", &msg) {
             on_msg(UninstallMsg::Error(
-                "Uninstall cancelled — Codex is still running.".into(),
+                "Uninstall cancelled — ChatGPT is still running.".into(),
             ));
             return;
         }
         on_msg(UninstallMsg::Phase {
-            phase: "Terminating Codex".into(),
+            phase: "Terminating ChatGPT".into(),
             detail: format!("{} process(es)", pids.len()),
         });
         proxy::terminate_pids(&pids, 5000);
         let still = proxy::find_our_codex_pids(&versions_root);
         if !still.is_empty() {
             on_msg(UninstallMsg::Error(format!(
-                "Failed to terminate {} Codex process(es). Aborting — no files modified.",
+                "Failed to terminate {} ChatGPT process(es). Aborting — no files modified.",
                 still.len()
             )));
             return;

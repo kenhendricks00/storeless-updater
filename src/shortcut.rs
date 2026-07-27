@@ -1,9 +1,9 @@
 //! Start Menu `.lnk` creation + refresh via `IShellLinkW` / `IPersistFile`.
 //!
-//! Target = `<root>\codex-launcher.exe` (stable path — shortcut survives
-//! version bumps). IconLocation points at a real `Codex.exe` so the Start
-//! Menu renders Codex's own icon. On update we rewrite the shortcut to
-//! retarget the icon at the newest version's `Codex.exe`.
+//! Target = `<root>\chatgpt-portable.exe` (stable path — shortcut survives
+//! version bumps). IconLocation points at a real `ChatGPT.exe` so the Start
+//! Menu renders ChatGPT's own icon. On update we rewrite the shortcut to
+//! retarget the icon at the newest version's `ChatGPT.exe`.
 
 use crate::config::InstallMode;
 use anyhow::{Context, Result};
@@ -18,9 +18,9 @@ use windows::Win32::UI::Shell::{
     KF_FLAG_DEFAULT,
 };
 
-pub const SHORTCUT_NAME: &str = "Codex.lnk";
+pub const SHORTCUT_NAME: &str = "ChatGPT Portable.lnk";
 
-/// Where `<StartMenu>\Programs\Codex.lnk` resolves for a given install
+/// Where `<StartMenu>\Programs\ChatGPT Portable.lnk` resolves for a given install
 /// mode. Portable mode returns `Ok(None)` — no Start Menu shortcut.
 pub fn link_path(mode: InstallMode) -> Result<Option<PathBuf>> {
     let id = match mode {

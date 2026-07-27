@@ -19,11 +19,13 @@ use crate::config::{Config, UpdatePolicy};
 use crate::store::{self, Fetcher};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Owner/repo for the launcher's own GitHub releases. Tweak here if the
-/// project ever moves.
-pub const LAUNCHER_REPO: &str = "vaportail/codex-windows-updater";
-pub const LAUNCHER_LATEST_API: &str =
-    "https://api.github.com/repos/vaportail/codex-windows-updater/releases/latest";
+/// Owner/repo for the launcher's own GitHub releases. `None` means launcher
+/// self-update is disabled; ChatGPT package updates remain enabled.
+pub const LAUNCHER_REPO: Option<&str> = None;
+
+pub const fn launcher_self_update_enabled() -> bool {
+    LAUNCHER_REPO.is_some()
+}
 
 #[derive(Debug, Clone)]
 pub enum UpdateDecision {
@@ -174,6 +176,9 @@ pub enum LauncherDeferChoice {
 /// Returns `Some` only if `known_latest_launcher` is newer than the running
 /// version and the user hasn't silenced it (skip / snooze / never).
 pub fn pending_launcher_from_state(cfg: &Config) -> Option<LauncherDecision> {
+    if !launcher_self_update_enabled() {
+        return None;
+    }
     if cfg.update_policy == UpdatePolicy::Never {
         return None;
     }
@@ -190,10 +195,11 @@ pub fn pending_launcher_from_state(cfg: &Config) -> Option<LauncherDecision> {
     if !version_gt(latest, &current) {
         return None;
     }
+    let repo = LAUNCHER_REPO.expect("launcher repo checked above");
     Some(LauncherDecision::Available {
         current,
         latest: latest.clone(),
-        release_url: format!("https://github.com/{LAUNCHER_REPO}/releases/tag/v{latest}"),
+        release_url: format!("https://github.com/{repo}/releases/tag/v{latest}"),
     })
 }
 
@@ -202,6 +208,11 @@ pub fn pending_launcher_from_state(cfg: &Config) -> Option<LauncherDecision> {
 /// skip-this-version. Doesn't itself update `last_check_unix` — caller is
 /// expected to record after both checks complete.
 pub fn check_launcher_auto(cfg: &Config) -> LauncherDecision {
+    if !launcher_self_update_enabled() {
+        return LauncherDecision::Skipped {
+            reason: "launcher self-update is not configured for this build".into(),
+        };
+    }
     if let Some(reason) = launcher_auto_check_skip_reason(cfg) {
         return LauncherDecision::Skipped { reason };
     }
@@ -220,11 +231,19 @@ pub fn check_launcher_auto(cfg: &Config) -> LauncherDecision {
 /// True when `check_launcher_auto` will call GitHub instead of skipping
 /// immediately due to policy, launcher snooze, or shared cooldown.
 pub fn launcher_auto_check_will_query(cfg: &Config) -> bool {
+    if !launcher_self_update_enabled() {
+        return false;
+    }
     launcher_auto_check_skip_reason(cfg).is_none()
 }
 
 /// Force a launcher-update check regardless of policy/snooze/cooldown.
 pub fn check_launcher_now() -> LauncherDecision {
+    if !launcher_self_update_enabled() {
+        return LauncherDecision::Skipped {
+            reason: "launcher self-update is not configured for this build".into(),
+        };
+    }
     let current = env!("CARGO_PKG_VERSION").to_string();
     match fetch_latest_launcher_tag() {
         Ok(tag) => {
@@ -232,10 +251,11 @@ pub fn check_launcher_now() -> LauncherDecision {
             // CARGO_PKG_VERSION is plain 0.1.0).
             let latest_ver = tag.trim_start_matches('v').to_string();
             if version_gt(&latest_ver, &current) {
+                let repo = LAUNCHER_REPO.expect("launcher repo checked above");
                 LauncherDecision::Available {
                     current,
                     latest: latest_ver,
-                    release_url: format!("https://github.com/{LAUNCHER_REPO}/releases/tag/{tag}"),
+                    release_url: format!("https://github.com/{repo}/releases/tag/{tag}"),
                 }
             } else {
                 LauncherDecision::UpToDate {
@@ -253,12 +273,15 @@ fn fetch_latest_launcher_tag() -> anyhow::Result<String> {
     struct LatestRelease {
         tag_name: String,
     }
+    let repo = LAUNCHER_REPO
+        .ok_or_else(|| anyhow::anyhow!("launcher self-update is not configured for this build"))?;
+    let latest_api = format!("https://api.github.com/repos/{repo}/releases/latest");
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
-        .user_agent(concat!("codex-windows-updater/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("chatgpt-portable/", env!("CARGO_PKG_VERSION")))
         .build()?;
     let resp = client
-        .get(LAUNCHER_LATEST_API)
+        .get(latest_api)
         .header("Accept", "application/vnd.github+json")
         .send()?
         .error_for_status()?;
@@ -372,5 +395,10 @@ mod tests {
         assert!(!version_gt("26.422.2437.0", "26.422.2437.0"));
         assert!(!version_gt("26.100.0.0", "26.422.0.0"));
         assert!(version_gt("27.0.0.0", "26.999.999.999"));
+    }
+
+    #[test]
+    fn derivative_build_does_not_use_upstream_self_updates() {
+        assert!(!launcher_self_update_enabled());
     }
 }

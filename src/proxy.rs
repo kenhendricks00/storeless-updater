@@ -120,25 +120,26 @@ pub fn find_singleton_holder(_user_data_dir: &Path) -> Option<SingletonHolder> {
 /// they understand why their click may surface that other install's window
 /// instead of ours.
 pub fn launch(root: &Path, cfg: &Config, forward_args: &[String]) -> Result<()> {
-    let exe = resolve_codex_exe(root, cfg.use_current_junction)
-        .ok_or_else(|| anyhow::anyhow!("no installed Codex.exe found under {}", root.display()))?;
+    let exe = resolve_codex_exe(root, cfg.use_current_junction).ok_or_else(|| {
+        anyhow::anyhow!("no installed ChatGPT.exe found under {}", root.display())
+    })?;
 
     if let Some(udd) = codex_user_data_dir() {
         if let Some(holder) = find_singleton_holder(&udd) {
             let versions_root = root.join("versions");
             if !path_starts_with_ci(&holder.image_path, &versions_root) {
                 let body = format!(
-                    "Codex is currently running from a different install:\n\n\
+                    "ChatGPT is currently running from a different install:\n\n\
                      {}\n\n\
-                     OK — Launch this install anyway. Codex's single-instance handling \
+                     OK — Launch this install anyway. ChatGPT's single-instance handling \
                      may transfer focus to the running install instead of starting yours fresh.\n\n\
-                     Kill other — Terminate the other Codex (and its child processes), \
+                     Kill other — Terminate the other ChatGPT (and its child processes), \
                      then launch this install cleanly.",
                     holder.image_path.display()
                 );
                 let choice = crate::dialogs::two_button_choice(
-                    "Codex launcher",
-                    "Another Codex installation is running",
+                    "ChatGPT Portable",
+                    "Another ChatGPT installation is running",
                     &body,
                     "OK",
                     "Kill other",

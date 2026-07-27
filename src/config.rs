@@ -26,14 +26,14 @@ pub enum InstallMode {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum UpdatePolicy {
-    Always,
     #[default]
+    Always,
     Daily,
     Weekly,
     Never,
 }
 
-/// Written next to `codex-launcher.exe` once installation completes.
+/// Written next to `chatgpt-portable.exe` once installation completes.
 /// Presence of this file is what makes the launcher run in proxy mode
 /// instead of installer mode.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -145,8 +145,8 @@ impl Config {
     ///   volume, AV, etc.) and is propagated.
     ///
     /// - **System**: writes to the per-user state file at
-    ///   `%LOCALAPPDATA%\codex-launcher\state.json`. The install-root config
-    ///   in `C:\Program Files\Codex` is fixed at install time (when the
+    ///   `%LOCALAPPDATA%\chatgpt-portable\state.json`. The install-root config
+    ///   in `C:\Program Files\ChatGPT Portable` is fixed at install time (when the
     ///   wizard ran elevated) and the unelevated proxy can't update it.
     pub fn save_runtime(&self, install_root: &Path) -> anyhow::Result<()> {
         match self.install_mode {
@@ -208,17 +208,9 @@ pub fn clear_state_file_if_ours(
 
 /// Per-user fallback state file shape. `install_root` is embedded so we
 /// can ignore stale state from a different install at the same machine.
-///
-/// TODO: currently the entire `Config` is serialized into the state file,
-/// meaning install-time fields (install_mode, keep_versions, fetcher,
-/// use_current_junction, register_uninstall) are also persisted and would
-/// override their install-root values on load. In practice this is benign
-/// — those fields don't change between writes — but if a future code path
-/// fat-fingers one of them at runtime, the state file becomes the
-/// authoritative answer. Tighten by splitting into a `RuntimeState`
-/// struct holding only mutable fields (current_version, update_policy,
-/// last_check_unix, suppress_until_unix, known_latest, skipped_version)
-/// and overlaying onto the install-root config at load time. Not urgent.
+/// The entire `Config` is serialized into the state file. Install-time fields
+/// do not change during runtime writes, so the overlay remains consistent with
+/// the install-root configuration.
 #[derive(Debug, Serialize, Deserialize)]
 struct StateFile {
     install_root: PathBuf,
@@ -229,7 +221,7 @@ fn state_file_path() -> Option<PathBuf> {
     let base = std::env::var("LOCALAPPDATA").ok()?;
     Some(
         PathBuf::from(base)
-            .join("codex-launcher")
+            .join("chatgpt-portable")
             .join("state.json"),
     )
 }
@@ -248,4 +240,14 @@ fn paths_equal(a: &Path, b: &Path) -> bool {
             .to_ascii_lowercase()
     };
     norm(a) == norm(b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UpdatePolicy;
+
+    #[test]
+    fn new_installs_check_for_updates_on_every_launch() {
+        assert_eq!(UpdatePolicy::default(), UpdatePolicy::Always);
+    }
 }
