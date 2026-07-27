@@ -256,7 +256,11 @@ fn process_image_path(pid: u32) -> Option<PathBuf> {
     }
 }
 
-/// Walk the process table collecting PIDs of every process named `Codex.exe`.
+fn is_chatgpt_process_name(name: &str) -> bool {
+    name.eq_ignore_ascii_case("ChatGPT.exe")
+}
+
+/// Walk the process table collecting PIDs of every process named `ChatGPT.exe`.
 /// Electron apps fork multiple processes (main + renderer + GPU + utility),
 /// all typically sharing the same exe name — callers that intend to terminate
 /// Codex should kill every PID returned here, not just the first.
@@ -271,7 +275,6 @@ pub fn find_codex_pids() -> Vec<u32> {
         TH32CS_SNAPPROCESS,
     };
 
-    let target = "codex.exe";
     let current_pid = std::process::id();
     let mut pids = Vec::new();
 
@@ -292,9 +295,8 @@ pub fn find_codex_pids() -> Vec<u32> {
                         .iter()
                         .position(|&c| c == 0)
                         .unwrap_or(entry.szExeFile.len());
-                    let name =
-                        String::from_utf16_lossy(&entry.szExeFile[..end]).to_ascii_lowercase();
-                    if name == target {
+                    let name = String::from_utf16_lossy(&entry.szExeFile[..end]);
+                    if is_chatgpt_process_name(&name) {
                         pids.push(entry.th32ProcessID);
                     }
                 }
@@ -336,6 +338,19 @@ pub fn terminate_pids(pids: &[u32], wait_ms: u32) {
             }
             let _ = CloseHandle(handle);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn current_desktop_process_name_is_detected_case_insensitively() {
+        assert!(is_chatgpt_process_name("ChatGPT.exe"));
+        assert!(is_chatgpt_process_name("chatgpt.EXE"));
+        assert!(!is_chatgpt_process_name("Codex.exe"));
+        assert!(!is_chatgpt_process_name("chatgpt-portable.exe"));
     }
 }
 

@@ -20,6 +20,7 @@ mod safety;
 mod shortcut;
 mod splash;
 mod store;
+mod trust;
 mod uninstall;
 mod updater;
 
@@ -1335,16 +1336,13 @@ fn latest_codex_exe(root: &std::path::Path, use_junction: bool) -> Option<std::p
         }
     }
 
-    let via_junction = link.join("Codex.exe");
-    if via_junction.exists() {
-        Some(via_junction)
-    } else {
-        Some(newest_exe)
-    }
+    package::resolve_installed_executable(&link)
+        .ok()
+        .or(Some(newest_exe))
 }
 
-/// Scan `versions/` for the highest numeric-dotted dir containing `Codex.exe`.
-/// Returns `(dir_name, full_path_to_Codex.exe)`.
+/// Scan `versions/` for the highest numeric-dotted dir containing a valid
+/// package manifest and its declared executable.
 fn newest_numeric_version(versions: &std::path::Path) -> Option<(String, std::path::PathBuf)> {
     let mut best: Option<(Vec<u64>, String, std::path::PathBuf)> = None;
     for entry in std::fs::read_dir(versions).ok()? {
@@ -1360,13 +1358,16 @@ fn newest_numeric_version(versions: &std::path::Path) -> Option<(String, std::pa
             continue;
         }
         let parts: Vec<u64> = name.split('.').map(|p| p.parse().unwrap_or(0)).collect();
-        let codex = entry.path().join("Codex.exe");
-        if !codex.exists() {
-            continue;
-        }
+        let executable = match package::resolve_installed_executable(&entry.path()) {
+            Ok(executable) => executable,
+            Err(error) => {
+                eprintln!("warn: ignoring invalid installed version {name}: {error:#}");
+                continue;
+            }
+        };
         match &best {
-            None => best = Some((parts, name, codex)),
-            Some((cur, _, _)) if parts > *cur => best = Some((parts, name, codex)),
+            None => best = Some((parts, name, executable)),
+            Some((cur, _, _)) if parts > *cur => best = Some((parts, name, executable)),
             _ => {}
         }
     }
@@ -1533,6 +1534,7 @@ fn run_test_extract(
 ) -> anyhow::Result<()> {
     let msix = msix_path
         .ok_or_else(|| anyhow::anyhow!("--test-extract requires --msix <path/to/file.msix>"))?;
+    trust::verify_msix_signature(msix)?;
     let root = root_override.unwrap_or_else(|| std::path::PathBuf::from("test_install"));
     std::fs::create_dir_all(&root)?;
 

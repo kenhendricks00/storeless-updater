@@ -1,11 +1,13 @@
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
+use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 pub const EXPECTED_PACKAGE_NAME: &str = "OpenAI.Codex";
 pub const EXPECTED_PACKAGE_PUBLISHER: &str = "CN=50BDFD77-8903-4850-9FFE-6E8522F64D5B";
 pub const EXPECTED_ARCHITECTURE: &str = "x64";
+pub const PORTABLE_MANIFEST_FILE: &str = ".appx-manifest.xml";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PackageMetadata {
@@ -64,6 +66,20 @@ pub fn parse_and_validate_manifest(xml: &str) -> Result<PackageMetadata> {
         version: identity.version,
         executable,
     })
+}
+
+pub fn resolve_installed_executable(version_dir: &Path) -> Result<PathBuf> {
+    let manifest_path = version_dir.join(PORTABLE_MANIFEST_FILE);
+    let manifest = fs::read_to_string(&manifest_path)
+        .with_context(|| format!("reading {}", manifest_path.display()))?;
+    let package = parse_and_validate_manifest(&manifest)?;
+    let executable = version_dir.join(package.executable);
+    ensure!(
+        executable.is_file(),
+        "declared application executable does not exist: {}",
+        executable.display()
+    );
+    Ok(executable)
 }
 
 #[derive(Debug)]
@@ -143,7 +159,9 @@ fn local_name(name: &[u8]) -> &[u8] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use std::path::Path;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     const CURRENT_MANIFEST: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
@@ -201,5 +219,51 @@ mod tests {
         let error = parse_and_validate_manifest(&manifest).unwrap_err();
 
         assert!(error.to_string().contains("outside the app payload"));
+    }
+
+    #[test]
+    fn resolves_installed_executable_from_saved_manifest() {
+        let sandbox = TestSandbox::new();
+        fs::write(sandbox.root.join(PORTABLE_MANIFEST_FILE), CURRENT_MANIFEST).unwrap();
+        fs::write(sandbox.root.join("ChatGPT.exe"), b"fixture executable").unwrap();
+
+        let executable = resolve_installed_executable(&sandbox.root).unwrap();
+
+        assert_eq!(executable, sandbox.root.join("ChatGPT.exe"));
+    }
+
+    #[test]
+    fn rejects_installed_version_with_missing_executable() {
+        let sandbox = TestSandbox::new();
+        fs::write(sandbox.root.join(PORTABLE_MANIFEST_FILE), CURRENT_MANIFEST).unwrap();
+
+        let error = resolve_installed_executable(&sandbox.root).unwrap_err();
+
+        assert!(error.to_string().contains("does not exist"));
+    }
+
+    struct TestSandbox {
+        root: PathBuf,
+    }
+
+    impl TestSandbox {
+        fn new() -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let root = std::env::temp_dir().join(format!(
+                "chatgpt-portable-package-test-{}-{unique}",
+                std::process::id()
+            ));
+            fs::create_dir_all(&root).unwrap();
+            Self { root }
+        }
+    }
+
+    impl Drop for TestSandbox {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.root);
+        }
     }
 }

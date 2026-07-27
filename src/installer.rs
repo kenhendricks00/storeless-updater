@@ -113,6 +113,13 @@ fn update_inner(root: &Path, on_msg: &dyn Fn(InstallMsg)) -> Result<String> {
     )?;
 
     on_msg(InstallMsg::Phase {
+        phase: "Verifying".into(),
+        detail: "checking Microsoft package signature".into(),
+    });
+    on_msg(InstallMsg::Progress(None));
+    crate::trust::verify_msix_signature(&result.msix_path)?;
+
+    on_msg(InstallMsg::Phase {
         phase: "Extracting".into(),
         detail: format!("version {}", result.version),
     });
@@ -219,7 +226,14 @@ fn run_inner(opts: &InstallOptions, on_msg: &dyn Fn(InstallMsg)) -> Result<Strin
         }
     };
 
-    // --- 2. Extract ---------------------------------------------------------
+    // --- 2. Verify + extract ------------------------------------------------
+    on_msg(InstallMsg::Phase {
+        phase: "Verifying".into(),
+        detail: "checking Microsoft package signature".into(),
+    });
+    on_msg(InstallMsg::Progress(None));
+    crate::trust::verify_msix_signature(&result.msix_path)?;
+
     on_msg(InstallMsg::Phase {
         phase: "Extracting".into(),
         detail: format!("version {}", result.version),
@@ -335,14 +349,16 @@ fn write_shortcut(root: &Path, mode: InstallMode, version: &str) -> Result<()> {
         return Ok(());
     };
     let target = root.join("codex-launcher.exe");
-    let icon = root.join("versions").join(version).join("Codex.exe");
+    let version_dir = root.join("versions").join(version);
+    let icon = crate::package::resolve_installed_executable(&version_dir)?;
     shortcut::create_or_update(&link, &target, &icon, "Codex (unofficial updater)", root)
 }
 
 /// (Re)write the Add/Remove Programs registry entry for the current install.
 fn write_registry(root: &Path, mode: InstallMode, version: &str) -> Result<()> {
     let launcher = root.join("codex-launcher.exe");
-    let icon = root.join("versions").join(version).join("Codex.exe");
+    let version_dir = root.join("versions").join(version);
+    let icon = crate::package::resolve_installed_executable(&version_dir)?;
     let entry = registry::UninstallEntry {
         display_name: "Codex (unofficial updater)",
         display_version: version,

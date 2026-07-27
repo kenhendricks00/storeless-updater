@@ -21,7 +21,6 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
 const APP_PREFIX: &str = "app/";
-pub const PORTABLE_MANIFEST_FILE: &str = ".appx-manifest.xml";
 
 /// Extract the `app/` subtree from `msix_path` into
 /// `<install_root>/versions/<version>/`. Any pre-existing directory at that
@@ -56,7 +55,7 @@ pub fn extract_app(
             .with_context(|| format!("clearing stale {}", partial_dir.display()))?;
     }
     fs::create_dir_all(&partial_dir)?;
-    fs::write(partial_dir.join(PORTABLE_MANIFEST_FILE), &manifest)?;
+    fs::write(partial_dir.join(package::PORTABLE_MANIFEST_FILE), &manifest)?;
 
     // First pass: count app/ entries so progress has a total.
     let mut total_app_entries: u64 = 0;

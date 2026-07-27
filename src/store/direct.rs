@@ -9,7 +9,7 @@
 //! SOAP envelope templates were adapted from StoreDev/StoreLib (MIT).
 
 use super::DownloadResult;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 use reqwest::blocking::Client;
@@ -105,9 +105,10 @@ fn resolve_url(product_id: &str) -> Result<(String, String, String)> {
         .to_string();
     let urls = get_file_urls(&client, &best.update_id, &best.revision_id)
         .context("FE3 GetExtendedUpdateInfo2 failed")?;
-    let url = pick_msix_url(&urls)
+    let raw_url = pick_msix_url(&urls)
         .ok_or_else(|| anyhow!("no usable MSIX URL in GetExtendedUpdateInfo2 response"))?;
-    Ok((url, best.moniker.clone(), version))
+    let url = normalize_delivery_url(&raw_url)?;
+    Ok((url.to_string(), best.moniker.clone(), version))
 }
 
 fn download_url(url: &str, dest: &Path, progress: &mut dyn FnMut(u64, Option<u64>)) -> Result<()> {
@@ -240,6 +241,40 @@ fn pick_msix_url(urls: &[String]) -> Option<String> {
         .filter(|u| u.len() != 99)
         .cloned()
         .max_by_key(|u| u.len())
+}
+
+fn normalize_delivery_url(raw: &str) -> Result<reqwest::Url> {
+    let mut url = reqwest::Url::parse(raw).context("invalid delivery URL")?;
+    ensure!(
+        matches!(url.scheme(), "http" | "https"),
+        "unsupported delivery URL scheme: {}",
+        url.scheme()
+    );
+    let host = url
+        .host_str()
+        .ok_or_else(|| anyhow!("delivery URL has no host"))?
+        .to_ascii_lowercase();
+    ensure!(
+        host == "delivery.mp.microsoft.com" || host.ends_with(".delivery.mp.microsoft.com"),
+        "untrusted delivery host: {host}"
+    );
+    ensure!(
+        url.username().is_empty() && url.password().is_none(),
+        "delivery URL must not contain credentials"
+    );
+    ensure!(
+        url.port().is_none() || matches!(url.port(), Some(80 | 443)),
+        "unsupported delivery URL port"
+    );
+    if url.scheme() == "http" {
+        url.set_scheme("https")
+            .map_err(|_| anyhow!("could not upgrade delivery URL to HTTPS"))?;
+        if url.port() == Some(80) {
+            url.set_port(None)
+                .map_err(|_| anyhow!("could not remove insecure delivery URL port"))?;
+        }
+    }
+    Ok(url)
 }
 
 fn moniker_version(moniker: &str) -> Option<&str> {
@@ -431,4 +466,39 @@ fn extract_file_urls(xml: &str) -> Vec<String> {
         buf.clear();
     }
     urls
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn microsoft_delivery_url_is_upgraded_to_https() {
+        let url = normalize_delivery_url(
+            "http://tlu.dl.delivery.mp.microsoft.com/filestreamingservice/files/example",
+        )
+        .unwrap();
+
+        assert_eq!(url.scheme(), "https");
+        assert_eq!(url.host_str(), Some("tlu.dl.delivery.mp.microsoft.com"));
+    }
+
+    #[test]
+    fn lookalike_delivery_host_is_rejected() {
+        let error = normalize_delivery_url(
+            "https://tlu.dl.delivery.mp.microsoft.com.example.test/payload.msix",
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("untrusted delivery host"));
+    }
+
+    #[test]
+    fn non_http_delivery_scheme_is_rejected() {
+        let error = normalize_delivery_url("file:///C:/payload.msix").unwrap_err();
+
+        assert!(error
+            .to_string()
+            .contains("unsupported delivery URL scheme"));
+    }
 }
