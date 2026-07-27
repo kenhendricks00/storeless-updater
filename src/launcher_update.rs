@@ -1,9 +1,9 @@
 //! Launcher self-update worker.
 //!
 //! Flow on click "Update launcher":
-//!   1. Download `chatgpt-portable.new.exe` next to the running exe.
+//!   1. Download `binaryferry.new.exe` next to the running exe.
 //!   2. Verify against the published `.sha256`.
-//!   3. Smoke-test: spawn `chatgpt-portable.new.exe --self-test` with a short
+//!   3. Smoke-test: spawn `binaryferry.new.exe --self-test` with a short
 //!      timeout. Catches the catastrophic local-environment failures
 //!      (corrupt download, AV quarantine, missing runtime DLL, architecture
 //!      mismatch) before we touch the running launcher. The new launcher
@@ -64,8 +64,8 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
         .ok_or_else(|| anyhow::anyhow!("running exe has no parent directory"))?
         .to_path_buf();
 
-    let new_path = dir.join("chatgpt-portable.new.exe");
-    let old_path = dir.join("chatgpt-portable.old.exe");
+    let new_path = dir.join("binaryferry.new.exe");
+    let old_path = dir.join("binaryferry.old.exe");
 
     // If a previous interrupted update left a `.new.exe` lying around, drop
     // it first — we're about to write a fresh one. `.old.exe` is left
@@ -73,9 +73,9 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
     let _ = std::fs::remove_file(&new_path);
 
     let tag = format!("v{target_version}");
-    let exe_url = format!("https://github.com/{repo}/releases/download/{tag}/chatgpt-portable.exe");
+    let exe_url = format!("https://github.com/{repo}/releases/download/{tag}/binaryferry.exe");
     let sha_url =
-        format!("https://github.com/{repo}/releases/download/{tag}/chatgpt-portable.exe.sha256");
+        format!("https://github.com/{repo}/releases/download/{tag}/binaryferry.exe.sha256");
 
     on_msg(LauncherUpdateMsg::Phase {
         phase: "Downloading launcher".into(),
@@ -85,7 +85,7 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
 
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
-        .user_agent(concat!("chatgpt-portable/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("binaryferry/", env!("CARGO_PKG_VERSION")))
         .build()?;
 
     download_to_file(&client, &exe_url, &new_path, on_msg)
@@ -131,7 +131,7 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
     Ok(())
 }
 
-/// Spawn `chatgpt-portable.new.exe --self-test` and wait up to `timeout`. The
+/// Spawn `binaryferry.new.exe --self-test` and wait up to `timeout`. The
 /// new launcher must short-circuit `--self-test` before any side-effecting
 /// code (cleanup, mode detection, UI, network) and exit 0. Any other
 /// outcome — non-zero exit, timeout, or spawn failure — is a smoke-test
@@ -211,7 +211,7 @@ fn download_to_file(
 }
 
 fn fetch_expected_sha(client: &reqwest::blocking::Client, url: &str) -> Result<String> {
-    // File contents look like `<hex>  chatgpt-portable.exe`. Take the first
+    // File contents look like `<hex>  binaryferry.exe`. Take the first
     // whitespace-delimited token.
     let body = client.get(url).send()?.error_for_status()?.text()?;
     let token = body
@@ -293,17 +293,17 @@ fn wide(p: &Path) -> Vec<u16> {
         .collect()
 }
 
-/// Best-effort: delete a half-written `chatgpt-portable.new.exe` from a prior
+/// Best-effort: delete a half-written `binaryferry.new.exe` from a prior
 /// interrupted self-update. Called once at startup. Silent on failure.
 ///
-/// `chatgpt-portable.old.exe` is **deliberately preserved** — it's the
+/// `binaryferry.old.exe` is **deliberately preserved** — it's the
 /// manual-rollback artifact from the previous successful update. The next
 /// successful self-update overwrites it via `MOVEFILE_REPLACE_EXISTING`.
 pub fn cleanup_stale_new_launcher() {
     let Some(dir) = current_exe_dir() else {
         return;
     };
-    let half = dir.join("chatgpt-portable.new.exe");
+    let half = dir.join("binaryferry.new.exe");
     if half.exists() {
         let _ = std::fs::remove_file(&half);
     }

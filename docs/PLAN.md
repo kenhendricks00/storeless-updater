@@ -1,4 +1,4 @@
-# Implementation plan: ChatGPT Portable
+# Implementation plan: BinaryFerry
 
 ## Architecture decisions
 
@@ -14,7 +14,7 @@
 Acceptance criteria:
 
 - Upstream MIT notices and history attribution are preserved.
-- Product metadata and documentation describe ChatGPT Portable accurately.
+- Product metadata and documentation describe BinaryFerry accurately.
 - The untouched baseline builds from its lockfile.
 
 Verification: `cargo build --locked --release`.
@@ -73,7 +73,7 @@ Dependencies: Task 3.
 
 Acceptance criteria:
 
-- User-facing text consistently says ChatGPT Portable.
+- User-facing text consistently says BinaryFerry.
 - The UI clearly labels the project unofficial and retains required Slint attribution.
 - Loading, success, error, update, offline, and rollback states are understandable and keyboard accessible.
 

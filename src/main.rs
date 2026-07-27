@@ -48,8 +48,8 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Best-effort cleanup of a half-written `chatgpt-portable.new.exe` from a
-    // prior interrupted self-update. `chatgpt-portable.old.exe` is preserved
+    // Best-effort cleanup of a half-written `binaryferry.new.exe` from a
+    // prior interrupted self-update. `binaryferry.old.exe` is preserved
     // as the manual-rollback artifact.
     if updater::launcher_self_update_enabled() {
         launcher_update::cleanup_stale_new_launcher();
@@ -581,7 +581,7 @@ fn run_uninstall_ui() -> anyhow::Result<()> {
         Err(e) => {
             dialogs::error(&format!(
                 "Couldn't read install state: {e:#}\n\n\
-                 This launcher doesn't appear to be a valid ChatGPT Portable install. \
+                 This launcher doesn't appear to be a valid BinaryFerry install. \
                  No action taken."
             ));
             return Ok(());
@@ -1383,7 +1383,7 @@ fn newest_numeric_version(versions: &std::path::Path) -> Option<(String, std::pa
 /// Fallback string used in user-facing messages when `LOCALAPPDATA` is
 /// unexpectedly unset. Mirrors the resolved path's shape so users can
 /// still find the directory if needed.
-const LAUNCHER_LOG_PATH_FALLBACK: &str = "%LOCALAPPDATA%\\chatgpt-portable\\launcher.log";
+const LAUNCHER_LOG_PATH_FALLBACK: &str = "%LOCALAPPDATA%\\binaryferry\\launcher.log";
 
 /// Per-user log location, always writable regardless of install mode
 /// (System installs to Program Files can't write next to the launcher exe
@@ -1393,7 +1393,7 @@ fn launcher_log_path() -> Option<std::path::PathBuf> {
     let base = std::env::var("LOCALAPPDATA").ok()?;
     Some(
         std::path::PathBuf::from(base)
-            .join("chatgpt-portable")
+            .join("binaryferry")
             .join("launcher.log"),
     )
 }

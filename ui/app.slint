@@ -138,7 +138,7 @@ export component AppWindow inherits Window {
     // 6=ApplyUpdate (download + replace running launcher).
     callback request-launcher-action(int);
 
-    title: "ChatGPT Portable";
+    title: "BinaryFerry";
     width: 580px;
     height: 420px;
     background: #1e1e2e;
@@ -156,7 +156,7 @@ export component AppWindow inherits Window {
         HorizontalBox {
             padding: 0px;
             Text {
-                text: "ChatGPT Portable";
+                text: "BinaryFerry";
                 font-size: 20px;
                 font-weight: 700;
                 color: #cdd6f4;
@@ -194,7 +194,7 @@ export component AppWindow inherits Window {
             if root.current-screen == 0 : VerticalBox {
                 spacing: 10px;
                 Text {
-                    text: "Unofficial portable installer for the official ChatGPT desktop app.";
+                    text: "Store-free launcher for the official ChatGPT desktop app.";
                     color: #cdd6f4;
                     font-size: 14px;
                     wrap: word-wrap;
@@ -225,13 +225,13 @@ export component AppWindow inherits Window {
                 }
                 ModeCard {
                     title: "User install";
-                    subtitle: "%LOCALAPPDATA%\\ChatGPT Portable — no admin required.";
+                    subtitle: "%LOCALAPPDATA%\\BinaryFerry — no admin required.";
                     selected: root.install-mode == 1;
                     clicked => { root.install-mode = 1; root.mode-selected(1); }
                 }
                 ModeCard {
                     title: "System install";
-                    subtitle: "C:\\Program Files\\ChatGPT Portable — requires admin, shared across users.";
+                    subtitle: "C:\\Program Files\\BinaryFerry — requires admin, shared across users.";
                     selected: root.install-mode == 2;
                     clicked => { root.install-mode = 2; root.mode-selected(2); }
                 }

@@ -5,7 +5,7 @@
 //! Steps executed:
 //!   1. Download MSIX (Direct or Winget) into `<root>/downloads/`
 //!   2. Extract `app/` subtree into `<root>/versions/<ver>/`
-//!   3. Copy current launcher exe to `<root>/chatgpt-portable.exe` (so the
+//!   3. Copy current launcher exe to `<root>/binaryferry.exe` (so the
 //!      stub lives next to updater.json and can proxy-launch later)
 //!   4. Write `<root>/updater.json`
 //!   5. Prune old versions to `keep_versions`
@@ -55,11 +55,11 @@ pub fn default_path(mode: InstallMode) -> PathBuf {
     match mode {
         InstallMode::Portable => std::env::current_dir()
             .unwrap_or_else(|_| PathBuf::from("."))
-            .join("ChatGPTPortable"),
+            .join("BinaryFerry"),
         InstallMode::User => directories::BaseDirs::new()
-            .map(|d| d.data_local_dir().join("ChatGPT Portable"))
-            .unwrap_or_else(|| PathBuf::from(r"C:\Users\Public\ChatGPT Portable")),
-        InstallMode::System => PathBuf::from(r"C:\Program Files\ChatGPT Portable"),
+            .map(|d| d.data_local_dir().join("BinaryFerry"))
+            .unwrap_or_else(|| PathBuf::from(r"C:\Users\Public\BinaryFerry")),
+        InstallMode::System => PathBuf::from(r"C:\Program Files\BinaryFerry"),
     }
 }
 
@@ -314,12 +314,12 @@ fn run_inner(opts: &InstallOptions, on_msg: &dyn Fn(InstallMsg)) -> Result<Strin
     Ok(result.version)
 }
 
-/// Copy the currently-running launcher to `<root>/chatgpt-portable.exe`.
+/// Copy the currently-running launcher to `<root>/binaryferry.exe`.
 /// Must be a no-op if source == dest (e.g. someone re-runs the installer
 /// from inside the install directory to reconfigure).
 fn place_launcher(root: &Path) -> Result<()> {
     let src = std::env::current_exe().context("current_exe()")?;
-    let dest = root.join("chatgpt-portable.exe");
+    let dest = root.join("binaryferry.exe");
     if same_file(&src, &dest) {
         // We're already running from the install location — nothing to do.
         return Ok(());
@@ -348,21 +348,21 @@ fn write_shortcut(root: &Path, mode: InstallMode, version: &str) -> Result<()> {
     let Some(link) = shortcut::link_path(mode)? else {
         return Ok(());
     };
-    let target = root.join("chatgpt-portable.exe");
+    let target = root.join("binaryferry.exe");
     let version_dir = root.join("versions").join(version);
     let icon = crate::package::resolve_installed_executable(&version_dir)?;
-    shortcut::create_or_update(&link, &target, &icon, "ChatGPT Portable (unofficial)", root)
+    shortcut::create_or_update(&link, &target, &icon, "BinaryFerry (unofficial)", root)
 }
 
 /// (Re)write the Add/Remove Programs registry entry for the current install.
 fn write_registry(root: &Path, mode: InstallMode, version: &str) -> Result<()> {
-    let launcher = root.join("chatgpt-portable.exe");
+    let launcher = root.join("binaryferry.exe");
     let version_dir = root.join("versions").join(version);
     let icon = crate::package::resolve_installed_executable(&version_dir)?;
     let entry = registry::UninstallEntry {
-        display_name: "ChatGPT Portable (unofficial)",
+        display_name: "BinaryFerry (unofficial)",
         display_version: version,
-        publisher: "ChatGPT Portable contributors",
+        publisher: "BinaryFerry contributors",
         install_location: root,
         uninstall_string: format!("\"{}\" --uninstall", launcher.display()),
         display_icon: &icon,

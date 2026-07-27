@@ -253,7 +253,7 @@ mod tests {
                 .unwrap()
                 .as_nanos();
             let root = std::env::temp_dir().join(format!(
-                "chatgpt-portable-package-test-{}-{unique}",
+                "binaryferry-package-test-{}-{unique}",
                 std::process::id()
             ));
             fs::create_dir_all(&root).unwrap();

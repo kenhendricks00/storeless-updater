@@ -17,7 +17,7 @@ use windows::Win32::System::Registry::{
 };
 
 pub const UNINSTALL_SUBKEY: &str =
-    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ChatGPTPortable";
+    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\BinaryFerry";
 
 fn root(mode: InstallMode) -> HKEY {
     match mode {

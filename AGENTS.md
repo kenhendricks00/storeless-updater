@@ -1,8 +1,8 @@
-# ChatGPT Portable contributor rules
+# BinaryFerry contributor rules
 
 ## Stack and commands
 
-- Rust 2021, minimum Rust 1.80
+- Rust 2021, minimum Rust 1.88
 - Slint desktop UI
 - Build: `cargo build --locked --release`
 - Test: `cargo test --locked`
@@ -26,4 +26,3 @@
 - Never accept arbitrary download URLs from users.
 - Never require the Microsoft Store client for the direct download path.
 - Never commit build output, downloaded packages, credentials, or device-specific state.
-

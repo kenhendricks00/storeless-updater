@@ -1,6 +1,6 @@
 # Security model
 
-ChatGPT Portable retrieves executable content, so downloaded bytes are treated as untrusted until every validation boundary succeeds.
+BinaryFerry retrieves executable content, so downloaded bytes are treated as untrusted until every validation boundary succeeds.
 
 ## Package acceptance
 

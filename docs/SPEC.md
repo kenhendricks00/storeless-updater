@@ -1,4 +1,4 @@
-# Spec: ChatGPT Portable
+# Spec: BinaryFerry
 
 ## Objective
 
@@ -51,8 +51,8 @@ docs/                Product spec, plan, and security notes
 Runtime layout:
 
 ```text
-ChatGPTPortable/
-  chatgpt-portable.exe
+BinaryFerry/
+  binaryferry.exe
   updater.json
   downloads/
   versions/

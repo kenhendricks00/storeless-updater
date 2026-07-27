@@ -138,7 +138,7 @@ pub fn launch(root: &Path, cfg: &Config, forward_args: &[String]) -> Result<()> 
                     holder.image_path.display()
                 );
                 let choice = crate::dialogs::two_button_choice(
-                    "ChatGPT Portable",
+                    "BinaryFerry",
                     "Another ChatGPT installation is running",
                     &body,
                     "OK",
@@ -351,7 +351,7 @@ mod tests {
         assert!(is_chatgpt_process_name("ChatGPT.exe"));
         assert!(is_chatgpt_process_name("chatgpt.EXE"));
         assert!(!is_chatgpt_process_name("Codex.exe"));
-        assert!(!is_chatgpt_process_name("chatgpt-portable.exe"));
+        assert!(!is_chatgpt_process_name("binaryferry.exe"));
     }
 }
 

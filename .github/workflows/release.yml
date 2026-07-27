@@ -34,32 +34,21 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item target/release/chatgpt-portable.exe dist/chatgpt-portable.exe
-          $hash = (Get-FileHash dist/chatgpt-portable.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  chatgpt-portable.exe" | Out-File -FilePath dist/chatgpt-portable.exe.sha256 -Encoding ASCII -NoNewline
+          Copy-Item target/release/binaryferry.exe dist/binaryferry.exe
+          $hash = (Get-FileHash dist/binaryferry.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  binaryferry.exe" | Out-File -FilePath dist/binaryferry.exe.sha256 -Encoding ASCII -NoNewline
           Write-Host "SHA-256: $hash"
 
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: dist/chatgpt-portable.exe
+          subject-path: dist/binaryferry.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          body_path: RELEASE_NOTES.md
           files: |
-            dist/chatgpt-portable.exe
-            dist/chatgpt-portable.exe.sha256
-          body: |
-            ## Verifying this build
-
-            This release was built by GitHub Actions from tag `${{ github.ref_name }}`
-            (commit `${{ github.sha }}`) and is signed via Sigstore. To verify the
-            binary you downloaded matches the one this workflow produced:
-
-            ```
-            gh attestation verify chatgpt-portable.exe --repo ${{ github.repository }}
-            ```
-
-            SHA-256 of the published binary is in `chatgpt-portable.exe.sha256`.
+            dist/binaryferry.exe
+            dist/binaryferry.exe.sha256

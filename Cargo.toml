@@ -1,13 +1,13 @@
 [package]
-name = "chatgpt-portable"
+name = "binaryferry"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Unofficial portable installer and updater for the ChatGPT Windows app"
+description = "Unofficial Store-free launcher and updater for the ChatGPT Windows app"
 license = "MIT"
 
 [[bin]]
-name = "chatgpt-portable"
+name = "binaryferry"
 path = "src/main.rs"
 
 [dependencies]

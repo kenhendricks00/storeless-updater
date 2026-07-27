@@ -23,7 +23,7 @@ pub fn yes_no(title: &str, body: &str) -> bool {
 }
 
 pub fn error(body: &str) {
-    let title_w = to_wide("ChatGPT Portable");
+    let title_w = to_wide("BinaryFerry");
     let body_w = to_wide(body);
     unsafe {
         let _ = MessageBoxW(

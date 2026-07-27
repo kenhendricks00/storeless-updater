@@ -1,16 +1,16 @@
-# ChatGPT Portable
+# BinaryFerry
 
-ChatGPT Portable is an unofficial Windows launcher and updater for the official ChatGPT desktop app. It downloads Microsoft's current signed package directly, validates it, extracts it into a versioned folder, and runs it without installing through or opening the Microsoft Store client.
+BinaryFerry is an independent, unofficial Windows launcher and updater for OpenAI's ChatGPT desktop app. It downloads Microsoft's current signed package directly, validates it, extracts it into a versioned folder, and runs it without installing through or opening the Microsoft Store client.
 
 It does not redistribute ChatGPT, modify the ChatGPT payload, bypass sign-in, or remove OpenAI's normal terms and account requirements.
 
 ## Quick start
 
-1. Download or build `chatgpt-portable.exe`.
+1. Download or build `binaryferry.exe`.
 2. Run it and keep the recommended **Portable** mode selected.
 3. Choose an install folder and click **Install**.
 4. The first download is large, so allow several minutes.
-5. Keep launching ChatGPT through `chatgpt-portable.exe`. It checks for an official update on each launch and asks before applying one.
+5. Keep launching ChatGPT through `binaryferry.exe`. It checks for an official update on each launch and asks before applying one.
 
 Portable mode creates a self-contained application folder and does not require administrator rights, registry entries, a background service, or the Microsoft Store app. Optional per-user and system installation modes are also available.
 
@@ -32,7 +32,7 @@ The Microsoft Store **client** is not required. Microsoft's catalog, update, and
 
 ## Security model
 
-The package source, HTTPS host, Windows signature, package identity, publisher, architecture, manifest executable path, and archive paths are validated before a downloaded version can be promoted or launched. See [docs/SECURITY.md](docs/SECURITY.md) for the detailed boundaries.
+The package source, allowlisted Microsoft delivery host, Windows signature, package identity, publisher, architecture, manifest executable path, and archive paths are validated before a downloaded version can be promoted or launched. See [docs/SECURITY.md](docs/SECURITY.md) for the detailed boundaries.
 
 The launcher itself is an independent open-source project and is not signed with an OpenAI or Microsoft certificate. Windows SmartScreen may warn about a newly downloaded build. Public releases should include a SHA-256 file and GitHub build-provenance attestation.
 
@@ -43,7 +43,7 @@ The launcher itself is an independent open-source project and is not signed with
 - Features that require Store package registration, protocol registration, or OS-managed capabilities may behave differently when the payload is run unpackaged.
 - ChatGPT updates are automatic only while using this launcher. There is no background updater.
 - The official package is large and multiple retained versions require additional disk space.
-- Launcher self-updates are intentionally disabled until this derivative project has its own public release repository. This does not affect ChatGPT package updates.
+- BinaryFerry checks its own public GitHub releases so future launcher security and compatibility updates can be installed from the same interface.
 
 ## Build from source
 
@@ -53,7 +53,7 @@ Install the stable Rust toolchain on x64 Windows, then run:
 cargo build --locked --release
 ```
 
-The executable is written to `target\release\chatgpt-portable.exe`.
+The executable is written to `target\release\binaryferry.exe`.
 
 Before publishing a change, run:
 
@@ -74,7 +74,9 @@ cargo run --locked --release -- --test-fetch
 
 This project is derived from the MIT-licensed [`vaportail/codex-windows-updater`](https://github.com/vaportail/codex-windows-updater). Its direct Microsoft package resolver is adapted from that work, which credits StoreDev/StoreLib for the FE3 request templates. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-ChatGPT and OpenAI are trademarks of OpenAI. Windows and Microsoft Store are trademarks of Microsoft. This project is not affiliated with, endorsed by, or supported by OpenAI or Microsoft.
+BinaryFerry is the project's own name. "ChatGPT" is used only to identify the official application with which it interoperates. ChatGPT and OpenAI are trademarks of OpenAI. Windows and Microsoft Store are trademarks of Microsoft. This project is not affiliated with, endorsed by, or supported by OpenAI or Microsoft.
+
+The project name was selected through a documented [preliminary name screen](docs/NAME_CLEARANCE.md). That screen is not legal advice or a guarantee of trademark availability.
 
 ## License
 
