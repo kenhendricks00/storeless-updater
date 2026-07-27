@@ -34,15 +34,20 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item target/release/binaryferry.exe dist/binaryferry.exe
-          $hash = (Get-FileHash dist/binaryferry.exe -Algorithm SHA256).Hash.ToLower()
+          Copy-Item target/release/storeless-updater.exe dist/storeless-updater.exe
+          $hash = (Get-FileHash dist/storeless-updater.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  storeless-updater.exe" | Out-File -FilePath dist/storeless-updater.exe.sha256 -Encoding ASCII -NoNewline
+
+          # v0.1.0 was published as BinaryFerry. Keep one migration asset so
+          # that its self-updater can install v0.2.0 and move users to the new name.
+          Copy-Item dist/storeless-updater.exe dist/binaryferry.exe
           "$hash  binaryferry.exe" | Out-File -FilePath dist/binaryferry.exe.sha256 -Encoding ASCII -NoNewline
           Write-Host "SHA-256: $hash"
 
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: dist/binaryferry.exe
+          subject-path: dist/storeless-updater.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -50,5 +55,7 @@ jobs:
           generate_release_notes: true
           body_path: RELEASE_NOTES.md
           files: |
+            dist/storeless-updater.exe
+            dist/storeless-updater.exe.sha256
             dist/binaryferry.exe
             dist/binaryferry.exe.sha256

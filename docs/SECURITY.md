@@ -1,6 +1,6 @@
 # Security model
 
-BinaryFerry retrieves executable content, so downloaded bytes are treated as untrusted until every validation boundary succeeds.
+Storeless Updater retrieves executable content, so downloaded bytes are treated as untrusted until every validation boundary succeeds.
 
 ## Package acceptance
 

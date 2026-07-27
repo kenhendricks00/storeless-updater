@@ -17,7 +17,7 @@ use windows::Win32::System::Registry::{
 };
 
 pub const UNINSTALL_SUBKEY: &str =
-    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\BinaryFerry";
+    r"Software\Microsoft\Windows\CurrentVersion\Uninstall\StorelessUpdater";
 
 fn root(mode: InstallMode) -> HKEY {
     match mode {

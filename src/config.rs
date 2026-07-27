@@ -33,7 +33,7 @@ pub enum UpdatePolicy {
     Never,
 }
 
-/// Written next to `binaryferry.exe` once installation completes.
+/// Written next to `storeless-updater.exe` once installation completes.
 /// Presence of this file is what makes the launcher run in proxy mode
 /// instead of installer mode.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -145,8 +145,8 @@ impl Config {
     ///   volume, AV, etc.) and is propagated.
     ///
     /// - **System**: writes to the per-user state file at
-    ///   `%LOCALAPPDATA%\binaryferry\state.json`. The install-root config
-    ///   in `C:\Program Files\BinaryFerry` is fixed at install time (when the
+    ///   `%LOCALAPPDATA%\storeless-updater\state.json`. The install-root config
+    ///   in `C:\Program Files\Storeless Updater` is fixed at install time (when the
     ///   wizard ran elevated) and the unelevated proxy can't update it.
     pub fn save_runtime(&self, install_root: &Path) -> anyhow::Result<()> {
         match self.install_mode {
@@ -219,7 +219,11 @@ struct StateFile {
 
 fn state_file_path() -> Option<PathBuf> {
     let base = std::env::var("LOCALAPPDATA").ok()?;
-    Some(PathBuf::from(base).join("binaryferry").join("state.json"))
+    Some(
+        PathBuf::from(base)
+            .join("storeless-updater")
+            .join("state.json"),
+    )
 }
 
 /// Best-effort path equality. Tries canonicalization first (resolves

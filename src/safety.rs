@@ -26,7 +26,8 @@ use windows::Win32::UI::Shell::{
 /// Required signature (all must hold):
 /// - `root/updater.json` exists and is a file
 /// - `root/versions/` exists and is a directory
-/// - `root/binaryferry.exe` exists and is a file
+/// - `root/storeless-updater.exe` exists and is a file (or the v0.1.0
+///   migration name `binaryferry.exe`)
 /// - `root` canonicalized is not equal to any Known Folder (user profile,
 ///   Desktop, Documents, Downloads, AppData, Program Files, Windows, etc.)
 /// - `root` is not a drive root (e.g. `C:\`)
@@ -49,9 +50,9 @@ pub fn validate_uninstall_root(root: &Path) -> Result<()> {
             root.display()
         );
     }
-    if !root.join("binaryferry.exe").is_file() {
+    if !root.join("storeless-updater.exe").is_file() && !root.join("binaryferry.exe").is_file() {
         bail!(
-            "refusing to uninstall: {} missing binaryferry.exe",
+            "refusing to uninstall: {} missing storeless-updater.exe",
             root.display()
         );
     }

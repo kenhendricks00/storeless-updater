@@ -280,7 +280,7 @@ mod tests {
                 .unwrap()
                 .as_nanos();
             let root = std::env::temp_dir().join(format!(
-                "binaryferry-extract-test-{}-{unique}",
+                "storeless-updater-extract-test-{}-{unique}",
                 std::process::id()
             ));
             fs::create_dir_all(&root).unwrap();

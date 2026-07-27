@@ -83,7 +83,7 @@ impl CleanupReport {
     pub fn to_log_string(&self, root: &Path) -> String {
         use std::fmt::Write as _;
         let mut out = String::new();
-        out.push_str("BinaryFerry uninstaller cleanup report\n");
+        out.push_str("Storeless Updater uninstaller cleanup report\n");
         let _ = writeln!(out, "Install root: {}", root.display());
         let _ = writeln!(out, "Deleted: {} entries", self.deleted.len());
         for p in &self.deleted {
@@ -258,8 +258,10 @@ fn spawn_cmd_self_delete(exe: &Path) -> std::io::Result<()> {
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     const DETACHED_PROCESS: u32 = 0x0000_0008;
 
-    let bat_path =
-        std::env::temp_dir().join(format!("binaryferry-selfdelete-{}.bat", std::process::id()));
+    let bat_path = std::env::temp_dir().join(format!(
+        "storeless-updater-selfdelete-{}.bat",
+        std::process::id()
+    ));
     // Escape `%` -> `%%` (batch literal) so paths like `C:\X\%foo%\app.exe`
     // can't expand to environment variables. Inside `"..."`, the other
     // metachars (`&`, `^`, `!`, parens) are inert in batch context.

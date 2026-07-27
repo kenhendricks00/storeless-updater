@@ -34,7 +34,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WM_PAINT, WM_TIMER, WNDCLASSEXW, WS_EX_APPWINDOW, WS_EX_LAYERED, WS_EX_TOPMOST, WS_POPUP,
 };
 
-const CLASS_NAME: PCWSTR = w!("BinaryFerrySplash");
+const CLASS_NAME: PCWSTR = w!("StorelessUpdaterSplash");
 const TIMER_ID: usize = 1;
 const TIMER_MS: u32 = 16;
 const WM_SET_STATUS: u32 = WM_APP + 1;

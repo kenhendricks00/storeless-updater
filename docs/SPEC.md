@@ -1,4 +1,4 @@
-# Spec: BinaryFerry
+# Spec: Storeless Updater
 
 ## Objective
 
@@ -51,8 +51,8 @@ docs/                Product spec, plan, and security notes
 Runtime layout:
 
 ```text
-BinaryFerry/
-  binaryferry.exe
+StorelessUpdater/
+  storeless-updater.exe
   updater.json
   downloads/
   versions/

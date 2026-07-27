@@ -82,7 +82,7 @@ mod tests {
             .unwrap()
             .as_nanos();
         let path = std::env::temp_dir().join(format!(
-            "binaryferry-unsigned-{}-{unique}.msix",
+            "storeless-updater-unsigned-{}-{unique}.msix",
             std::process::id()
         ));
         fs::write(&path, b"not a signed package").unwrap();

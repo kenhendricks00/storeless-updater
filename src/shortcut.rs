@@ -1,6 +1,6 @@
 //! Start Menu `.lnk` creation + refresh via `IShellLinkW` / `IPersistFile`.
 //!
-//! Target = `<root>\binaryferry.exe` (stable path — shortcut survives
+//! Target = `<root>\storeless-updater.exe` (stable path — shortcut survives
 //! version bumps). IconLocation points at a real `ChatGPT.exe` so the Start
 //! Menu renders ChatGPT's own icon. On update we rewrite the shortcut to
 //! retarget the icon at the newest version's `ChatGPT.exe`.
@@ -18,9 +18,9 @@ use windows::Win32::UI::Shell::{
     KF_FLAG_DEFAULT,
 };
 
-pub const SHORTCUT_NAME: &str = "BinaryFerry.lnk";
+pub const SHORTCUT_NAME: &str = "Storeless Updater.lnk";
 
-/// Where `<StartMenu>\Programs\BinaryFerry.lnk` resolves for a given install
+/// Where `<StartMenu>\Programs\Storeless Updater.lnk` resolves for a given install
 /// mode. Portable mode returns `Ok(None)` — no Start Menu shortcut.
 pub fn link_path(mode: InstallMode) -> Result<Option<PathBuf>> {
     let id = match mode {

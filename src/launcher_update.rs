@@ -1,9 +1,9 @@
 //! Launcher self-update worker.
 //!
 //! Flow on click "Update launcher":
-//!   1. Download `binaryferry.new.exe` next to the running exe.
+//!   1. Download `storeless-updater.new.exe` next to the running exe.
 //!   2. Verify against the published `.sha256`.
-//!   3. Smoke-test: spawn `binaryferry.new.exe --self-test` with a short
+//!   3. Smoke-test: spawn `storeless-updater.new.exe --self-test` with a short
 //!      timeout. Catches the catastrophic local-environment failures
 //!      (corrupt download, AV quarantine, missing runtime DLL, architecture
 //!      mismatch) before we touch the running launcher. The new launcher
@@ -64,8 +64,8 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
         .ok_or_else(|| anyhow::anyhow!("running exe has no parent directory"))?
         .to_path_buf();
 
-    let new_path = dir.join("binaryferry.new.exe");
-    let old_path = dir.join("binaryferry.old.exe");
+    let new_path = dir.join("storeless-updater.new.exe");
+    let old_path = dir.join("storeless-updater.old.exe");
 
     // If a previous interrupted update left a `.new.exe` lying around, drop
     // it first — we're about to write a fresh one. `.old.exe` is left
@@ -73,9 +73,10 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
     let _ = std::fs::remove_file(&new_path);
 
     let tag = format!("v{target_version}");
-    let exe_url = format!("https://github.com/{repo}/releases/download/{tag}/binaryferry.exe");
+    let exe_url =
+        format!("https://github.com/{repo}/releases/download/{tag}/storeless-updater.exe");
     let sha_url =
-        format!("https://github.com/{repo}/releases/download/{tag}/binaryferry.exe.sha256");
+        format!("https://github.com/{repo}/releases/download/{tag}/storeless-updater.exe.sha256");
 
     on_msg(LauncherUpdateMsg::Phase {
         phase: "Downloading launcher".into(),
@@ -85,7 +86,7 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
 
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(60))
-        .user_agent(concat!("binaryferry/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("storeless-updater/", env!("CARGO_PKG_VERSION")))
         .build()?;
 
     download_to_file(&client, &exe_url, &new_path, on_msg)
@@ -131,7 +132,7 @@ fn apply_inner(target_version: &str, on_msg: &dyn Fn(LauncherUpdateMsg)) -> Resu
     Ok(())
 }
 
-/// Spawn `binaryferry.new.exe --self-test` and wait up to `timeout`. The
+/// Spawn `storeless-updater.new.exe --self-test` and wait up to `timeout`. The
 /// new launcher must short-circuit `--self-test` before any side-effecting
 /// code (cleanup, mode detection, UI, network) and exit 0. Any other
 /// outcome — non-zero exit, timeout, or spawn failure — is a smoke-test
@@ -211,7 +212,7 @@ fn download_to_file(
 }
 
 fn fetch_expected_sha(client: &reqwest::blocking::Client, url: &str) -> Result<String> {
-    // File contents look like `<hex>  binaryferry.exe`. Take the first
+    // File contents look like `<hex>  storeless-updater.exe`. Take the first
     // whitespace-delimited token.
     let body = client.get(url).send()?.error_for_status()?.text()?;
     let token = body
@@ -293,17 +294,17 @@ fn wide(p: &Path) -> Vec<u16> {
         .collect()
 }
 
-/// Best-effort: delete a half-written `binaryferry.new.exe` from a prior
+/// Best-effort: delete a half-written `storeless-updater.new.exe` from a prior
 /// interrupted self-update. Called once at startup. Silent on failure.
 ///
-/// `binaryferry.old.exe` is **deliberately preserved** — it's the
+/// `storeless-updater.old.exe` is **deliberately preserved** — it's the
 /// manual-rollback artifact from the previous successful update. The next
 /// successful self-update overwrites it via `MOVEFILE_REPLACE_EXISTING`.
 pub fn cleanup_stale_new_launcher() {
     let Some(dir) = current_exe_dir() else {
         return;
     };
-    let half = dir.join("binaryferry.new.exe");
+    let half = dir.join("storeless-updater.new.exe");
     if half.exists() {
         let _ = std::fs::remove_file(&half);
     }

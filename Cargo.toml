@@ -1,13 +1,13 @@
 [package]
-name = "binaryferry"
-version = "0.1.0"
+name = "storeless-updater"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Unofficial Store-free launcher and updater for the ChatGPT Windows app"
 license = "MIT"
 
 [[bin]]
-name = "binaryferry"
+name = "storeless-updater"
 path = "src/main.rs"
 
 [dependencies]

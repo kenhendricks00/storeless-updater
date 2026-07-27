@@ -21,7 +21,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Owner/repo for the launcher's own GitHub releases. `None` means launcher
 /// self-update is disabled; ChatGPT package updates remain enabled.
-pub const LAUNCHER_REPO: Option<&str> = Some("kenhendricks00/binaryferry");
+pub const LAUNCHER_REPO: Option<&str> = Some("kenhendricks00/storeless-updater");
 
 pub const fn launcher_self_update_enabled() -> bool {
     LAUNCHER_REPO.is_some()
@@ -278,7 +278,7 @@ fn fetch_latest_launcher_tag() -> anyhow::Result<String> {
     let latest_api = format!("https://api.github.com/repos/{repo}/releases/latest");
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
-        .user_agent(concat!("binaryferry/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("storeless-updater/", env!("CARGO_PKG_VERSION")))
         .build()?;
     let resp = client
         .get(latest_api)
@@ -400,6 +400,6 @@ mod tests {
     #[test]
     fn public_build_uses_its_own_release_repository() {
         assert!(launcher_self_update_enabled());
-        assert_eq!(LAUNCHER_REPO, Some("kenhendricks00/binaryferry"));
+        assert_eq!(LAUNCHER_REPO, Some("kenhendricks00/storeless-updater"));
     }
 }

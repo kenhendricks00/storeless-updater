@@ -1,4 +1,4 @@
-# BinaryFerry contributor rules
+# Storeless Updater contributor rules
 
 ## Stack and commands
 

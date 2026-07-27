@@ -2,7 +2,7 @@
 
 ## codex-windows-updater
 
-BinaryFerry is derived from [`vaportail/codex-windows-updater`](https://github.com/vaportail/codex-windows-updater), copyright 2026 vaportail, under the MIT License included in this repository.
+Storeless Updater is derived from [`vaportail/codex-windows-updater`](https://github.com/vaportail/codex-windows-updater), copyright 2026 vaportail, under the MIT License included in this repository.
 
 The upstream project states that its Microsoft Store catalog and Windows Update FE3 protocol implementation was based on StoreDev/StoreLib and retains that project's request-template attribution in the source.
 
