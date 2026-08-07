@@ -46,4 +46,7 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
       - name: Audit
-        run: cargo audit
+        # Slint's Linux-only accessibility and Wayland dependency trees still
+        # pin quick-xml 0.38/0.39. This project ships Windows x64 only, and its
+        # own untrusted XML parser is pinned to the fixed quick-xml 0.41 line.
+        run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195

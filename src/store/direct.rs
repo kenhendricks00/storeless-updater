@@ -11,7 +11,7 @@
 use super::DownloadResult;
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use quick_xml::events::Event;
-use quick_xml::reader::Reader;
+use quick_xml::{escape, reader::Reader, XmlVersion};
 use reqwest::blocking::Client;
 use serde_json::Value;
 use std::io::{Read, Write};
@@ -352,8 +352,10 @@ fn extract_element_text(xml: &str, tag: &str) -> Option<String> {
                 return Some(collected);
             }
             Ok(Event::Text(t)) if depth_in > 0 => {
-                if let Ok(s) = t.unescape() {
-                    collected.push_str(&s);
+                if let Ok(decoded) = t.xml_content(XmlVersion::Implicit1_0) {
+                    if let Ok(unescaped) = escape::unescape(&decoded) {
+                        collected.push_str(&unescaped);
+                    }
                 }
             }
             Ok(Event::Eof) => return None,
@@ -448,7 +450,10 @@ fn read_identity_attrs(e: &quick_xml::events::BytesStart, p: &mut PendingUpdate)
     }
     for attr in e.attributes().flatten() {
         let key = local_name(attr.key.as_ref()).to_vec();
-        let val = attr.unescape_value().ok().map(|c| c.into_owned());
+        let val = attr
+            .normalized_value(XmlVersion::Implicit1_0)
+            .ok()
+            .map(|c| c.into_owned());
         match (key.as_slice(), val) {
             (b"UpdateID", Some(v)) => p.update_id = Some(v),
             (b"RevisionNumber", Some(v)) => p.revision_id = Some(v),
@@ -461,7 +466,7 @@ fn read_appx_attrs(e: &quick_xml::events::BytesStart, p: &mut PendingUpdate) {
     for attr in e.attributes().flatten() {
         let key = local_name(attr.key.as_ref()).to_vec();
         if key == b"PackageMoniker" {
-            if let Ok(v) = attr.unescape_value() {
+            if let Ok(v) = attr.normalized_value(XmlVersion::Implicit1_0) {
                 p.moniker = Some(v.into_owned());
             }
         }
@@ -488,8 +493,10 @@ fn extract_file_urls(xml: &str) -> Vec<String> {
                 _ => {}
             },
             Ok(Event::Text(t)) if in_url => {
-                if let Ok(s) = t.unescape() {
-                    urls.push(s.into_owned());
+                if let Ok(decoded) = t.xml_content(XmlVersion::Implicit1_0) {
+                    if let Ok(unescaped) = escape::unescape(&decoded) {
+                        urls.push(unescaped.into_owned());
+                    }
                 }
             }
             Ok(Event::Eof) => break,

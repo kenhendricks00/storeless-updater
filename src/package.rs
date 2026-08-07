@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use quick_xml::events::{BytesStart, Event};
-use quick_xml::Reader;
+use quick_xml::{Reader, XmlVersion};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
@@ -113,7 +113,7 @@ fn attribute(element: &BytesStart<'_>, name: &[u8]) -> Option<String> {
         (local_name(attribute.key.as_ref()) == name)
             .then(|| {
                 attribute
-                    .unescape_value()
+                    .normalized_value(XmlVersion::Implicit1_0)
                     .ok()
                     .map(|value| value.into_owned())
             })
