@@ -2,5 +2,6 @@
 /dist
 /downloads
 /versions
+/work
 *.pdb
 /sync_dump.xml

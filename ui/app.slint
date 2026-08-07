@@ -16,30 +16,47 @@
 //  30 Launcher update prompt
 //  31 Launcher self-update done (restart-to-apply notice)
 
-import { VerticalBox, HorizontalBox, Button, LineEdit, CheckBox, ComboBox } from "std-widgets.slint";
+import { VerticalBox, HorizontalBox, LineEdit, CheckBox, ComboBox } from "std-widgets.slint";
 
-component DarkButton inherits Rectangle {
+// ChatGPT-inspired light palette shared by every wizard state.
+global Palette {
+    out property <color> canvas: #ffffff;
+    out property <color> text: #0d0d0d;
+    out property <color> text-secondary: #6b6b6b;
+    out property <color> text-tertiary: #8a8a8a;
+    out property <color> divider: #e5e5e5;
+    out property <color> control: #0d0d0d;
+    out property <color> control-hover: #2f2f2f;
+    out property <color> control-pressed: #000000;
+    out property <color> control-text: #ffffff;
+    out property <color> surface: #f7f7f8;
+    out property <color> surface-hover: #eeeeef;
+    out property <color> success: #188038;
+    out property <color> danger: #c92a2a;
+}
+
+component ChatButton inherits Rectangle {
     in property <string> text;
     in property <bool> primary: false;
     in property <bool> disabled: false;
     callback clicked;
-    height: 36px;
-    min-width: 96px;
-    border-radius: 4px;
-    background: ta.has-hover && !root.disabled
-        ? (root.primary ? #89b4fa : #45475a)
-        : (root.primary ? #74c7ec : #313244);
+    height: 44px;
+    min-width: 104px;
+    border-radius: 9px;
+    background: ta.pressed && !root.disabled
+        ? Palette.control-pressed
+        : (ta.has-hover && !root.disabled ? Palette.control-hover : Palette.control);
     opacity: root.disabled ? 0.5 : 1.0;
     // HorizontalLayout drives the Rectangle's preferred width from the
     // Text's measured size + padding. Without a layout the Text is overlaid
     // and `min-width: 96px` is the only width source — wider labels clip.
     HorizontalLayout {
-        padding-left: 14px;
-        padding-right: 14px;
+        padding-left: 20px;
+        padding-right: 20px;
         Text {
             text: root.text;
-            color: root.primary ? #11111b : #cdd6f4;
-            font-size: 13px;
+            color: Palette.control-text;
+            font-size: 14px;
             font-weight: 600;
             horizontal-alignment: center;
             vertical-alignment: center;
@@ -56,27 +73,27 @@ component ModeCard inherits Rectangle {
     in property <string> subtitle;
     in property <bool> selected: false;
     callback clicked;
-    height: 58px;
-    border-radius: 6px;
-    border-width: 2px;
-    border-color: root.selected ? #89b4fa : (ta.has-hover ? #45475a : #313244);
-    background: ta.has-hover ? #26263a : #181825;
+    height: 68px;
+    border-radius: 10px;
+    border-width: root.selected ? 2px : 1px;
+    border-color: root.selected ? Palette.text : Palette.divider;
+    background: ta.has-hover ? Palette.surface-hover : Palette.surface;
     VerticalBox {
-        padding-left: 14px;
-        padding-right: 14px;
-        padding-top: 8px;
-        padding-bottom: 8px;
-        spacing: 2px;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        spacing: 4px;
         Text {
             text: root.title;
-            color: #cdd6f4;
+            color: Palette.text;
             font-size: 14px;
             font-weight: 600;
         }
         Text {
             text: root.subtitle;
-            color: #a6adc8;
-            font-size: 11px;
+            color: Palette.text-secondary;
+            font-size: 12px;
         }
     }
     ta := TouchArea {
@@ -139,9 +156,9 @@ export component AppWindow inherits Window {
     callback request-launcher-action(int);
 
     title: "Storeless Updater";
-    width: 580px;
-    height: 420px;
-    background: #1e1e2e;
+    width: 700px;
+    height: 500px;
+    background: Palette.canvas;
     default-font-family: "Segoe UI";
     // Launcher reminder is shown after Codex is launched/focused, which
     // would otherwise bury it. Pin only on screen 30 so other screens
@@ -149,26 +166,29 @@ export component AppWindow inherits Window {
     always-on-top: current-screen == 30 || current-screen == 31;
 
     VerticalBox {
-        padding: 24px;
-        spacing: 14px;
+        padding-left: 32px;
+        padding-right: 32px;
+        padding-top: 26px;
+        padding-bottom: 20px;
+        spacing: 18px;
 
         // Header
         HorizontalBox {
             padding: 0px;
             Text {
                 text: "Storeless Updater";
-                font-size: 20px;
+                font-size: 26px;
                 font-weight: 700;
-                color: #cdd6f4;
+                color: Palette.text;
             }
             Rectangle {} // spacer
             Text {
                 text: root.current-screen == 10 ? "" :
-                      root.current-screen == 11 ? "Checking for updates" :
-                      root.current-screen == 12 ? "Update available" :
+                      root.current-screen == 11 ? "Working…" :
+                      root.current-screen == 12 ? "" :
                       root.current-screen == 13 ? "Up to date" :
                       root.current-screen == 20 ? "Uninstall ChatGPT" :
-                      root.current-screen == 21 ? "Uninstalling…" :
+                      root.current-screen == 21 ? "Working…" :
                       root.current-screen == 22 ? "Uninstall complete" :
                       root.current-screen == 23 ? "Uninstall failed" :
                       root.current-screen == 30 ? "Launcher update available" :
@@ -179,12 +199,12 @@ export component AppWindow inherits Window {
                       root.current-screen == 3 ? "Step 3 / 3" :
                       root.current-screen == 4 ? "Working…" :
                       root.current-screen == 5 ? "Done" : "Error";
-                color: #6c7086;
-                font-size: 12px;
+                color: Palette.text-secondary;
+                font-size: 14px;
                 vertical-alignment: center;
             }
         }
-        Rectangle { height: 1px; background: #313244; }
+        Rectangle { height: 1px; background: Palette.divider; }
 
         // Body (screen-specific)
         Rectangle {
@@ -195,18 +215,18 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Text {
                     text: "Unofficial Storeless Updater for ChatGPT on Windows.";
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 14px;
                     wrap: word-wrap;
                 }
                 Text {
                     text: "Downloads Microsoft's signed package directly, verifies it, and extracts it. The Microsoft Store app is not required.";
-                    color: #a6adc8;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
                 Rectangle { height: 8px; }
-                Text { text: "Click Next to choose where to install."; color: #a6adc8; font-size: 12px; }
+                Text { text: "Click Next to choose where to install."; color: Palette.text-secondary; font-size: 12px; }
             }
 
             // Mode
@@ -214,7 +234,7 @@ export component AppWindow inherits Window {
                 spacing: 8px;
                 Text {
                     text: "Where should ChatGPT be installed?";
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 14px;
                 }
                 ModeCard {
@@ -240,7 +260,7 @@ export component AppWindow inherits Window {
             // Path
             if root.current-screen == 2 : VerticalBox {
                 spacing: 8px;
-                Text { text: "Install location"; color: #cdd6f4; font-size: 14px; }
+                Text { text: "Install location"; color: Palette.text; font-size: 14px; }
                 HorizontalBox {
                     padding: 0px;
                     spacing: 8px;
@@ -248,11 +268,11 @@ export component AppWindow inherits Window {
                         text <=> root.install-path;
                         horizontal-stretch: 1;
                     }
-                    DarkButton { text: "Browse…"; clicked => { root.path-browse(); } }
+                    ChatButton { text: "Browse…"; clicked => { root.path-browse(); } }
                 }
                 Text {
                     text: "A `versions/` subdirectory will hold each installed MSIX version. The launcher sits at the root and re-launches the newest version.";
-                    color: #6c7086;
+                    color: Palette.text-tertiary;
                     font-size: 11px;
                     wrap: word-wrap;
                 }
@@ -261,7 +281,7 @@ export component AppWindow inherits Window {
             // Options
             if root.current-screen == 3 : VerticalBox {
                 spacing: 12px;
-                Text { text: "Options"; color: #cdd6f4; font-size: 14px; }
+                Text { text: "Options"; color: Palette.text; font-size: 14px; }
 
                 CheckBox { text: "Create Start Menu shortcut"; checked <=> root.create-shortcut; }
                 CheckBox {
@@ -276,7 +296,7 @@ export component AppWindow inherits Window {
                 HorizontalBox {
                     padding: 0px;
                     spacing: 8px;
-                    Text { text: "Keep previous versions:"; color: #cdd6f4; vertical-alignment: center; }
+                    Text { text: "Keep previous versions:"; color: Palette.text; vertical-alignment: center; }
                     ComboBox {
                         model: ["1", "2", "3", "5"];
                         current-index: root.keep-versions == 1 ? 0 : root.keep-versions == 2 ? 1 : root.keep-versions == 3 ? 2 : 3;
@@ -289,7 +309,7 @@ export component AppWindow inherits Window {
                 HorizontalBox {
                     padding: 0px;
                     spacing: 8px;
-                    Text { text: "Fetcher:"; color: #cdd6f4; vertical-alignment: center; }
+                    Text { text: "Fetcher:"; color: Palette.text; vertical-alignment: center; }
                     ComboBox {
                         model: ["Direct  (recommended)", "Winget  (may require Entra ID)"];
                         current-index <=> root.fetcher;
@@ -298,7 +318,7 @@ export component AppWindow inherits Window {
 
                 Text {
                     text: "Direct downloads the MSIX from Microsoft's delivery CDN via the Store's own protocol. Winget shells out to winget.exe and currently requires a Microsoft Entra work/school account for Store packages.";
-                    color: #6c7086;
+                    color: Palette.text-tertiary;
                     font-size: 11px;
                     wrap: word-wrap;
                 }
@@ -306,19 +326,19 @@ export component AppWindow inherits Window {
 
             // Progress
             if root.current-screen == 4 : VerticalBox {
-                spacing: 14px;
+                spacing: 22px;
                 Rectangle { vertical-stretch: 1; } // top spacer
                 Text {
                     text: root.progress-phase;
-                    color: #cdd6f4;
-                    font-size: 15px;
-                    font-weight: 600;
+                    color: Palette.text;
+                    font-size: 20px;
+                    font-weight: 400;
                     horizontal-alignment: center;
                 }
                 Rectangle {
                     height: 12px;
                     border-radius: 6px;
-                    background: #313244;
+                    background: Palette.divider;
                     Rectangle {
                         x: 0;
                         y: 0;
@@ -327,13 +347,13 @@ export component AppWindow inherits Window {
                             ? parent.width * 0.3
                             : parent.width * root.progress-fraction;
                         border-radius: 6px;
-                        background: #89b4fa;
+                        background: Palette.control;
                     }
                 }
                 Text {
                     text: root.progress-detail;
-                    color: #a6adc8;
-                    font-size: 12px;
+                    color: Palette.text;
+                    font-size: 14px;
                     horizontal-alignment: center;
                     wrap: word-wrap;
                 }
@@ -342,27 +362,41 @@ export component AppWindow inherits Window {
 
             // Done
             if root.current-screen == 5 : VerticalBox {
-                spacing: 10px;
+                spacing: 14px;
                 Rectangle { vertical-stretch: 1; }
-                Text {
-                    text: "ChatGPT is installed.";
-                    color: #a6e3a1;
-                    font-size: 18px;
-                    font-weight: 700;
-                    horizontal-alignment: center;
+                HorizontalBox {
+                    spacing: 12px;
+                    Rectangle {}
+                    Rectangle {
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 15px;
+                        border-width: 2px;
+                        border-color: Palette.success;
+                        Text {
+                            text: "✓";
+                            font-family: "Segoe UI Symbol";
+                            color: Palette.success;
+                            font-size: 18px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                    Text {
+                        text: "ChatGPT is installed.";
+                        color: Palette.success;
+                        font-size: 20px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                    Rectangle {}
                 }
                 Text {
                     text: "Version " + root.installed-version;
-                    color: #cdd6f4;
-                    font-size: 13px;
+                    color: Palette.text-secondary;
+                    font-size: 14px;
                     horizontal-alignment: center;
-                }
-                Text {
-                    text: root.install-path;
-                    color: #6c7086;
-                    font-size: 11px;
-                    horizontal-alignment: center;
-                    wrap: word-wrap;
                 }
                 Rectangle { vertical-stretch: 1; }
             }
@@ -372,13 +406,13 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Text {
                     text: "Installation failed";
-                    color: #f38ba8;
+                    color: Palette.danger;
                     font-size: 16px;
                     font-weight: 700;
                 }
                 Text {
                     text: root.error-text;
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
@@ -387,37 +421,37 @@ export component AppWindow inherits Window {
             // Proxy status
             if root.current-screen == 10 : VerticalBox {
                 spacing: 10px;
-                Text { text: "Proxy mode"; color: #94e2d5; font-size: 14px; font-weight: 600; }
-                Text { text: root.proxy-status; color: #a6adc8; font-size: 12px; wrap: word-wrap; }
+                Text { text: "Proxy mode"; color: Palette.text-secondary; font-size: 14px; font-weight: 600; }
+                Text { text: root.proxy-status; color: Palette.text-secondary; font-size: 12px; wrap: word-wrap; }
             }
 
             // Checking for updates
             if root.current-screen == 11 : VerticalBox {
-                spacing: 12px;
+                spacing: 22px;
                 Rectangle { vertical-stretch: 1; }
                 Text {
                     text: "Checking for updates…";
-                    color: #cdd6f4;
-                    font-size: 15px;
-                    font-weight: 600;
+                    color: Palette.text;
+                    font-size: 20px;
+                    font-weight: 400;
                     horizontal-alignment: center;
                 }
                 Rectangle {
-                    height: 8px;
-                    border-radius: 4px;
-                    background: #313244;
+                    height: 12px;
+                    border-radius: 6px;
+                    background: Palette.divider;
                     Rectangle {
                         x: 0; y: 0;
                         height: parent.height;
                         width: parent.width * 0.3;
-                        border-radius: 4px;
-                        background: #89b4fa;
+                        border-radius: 6px;
+                        background: Palette.control;
                     }
                 }
                 Text {
                     text: "Contacting Microsoft's package catalog…";
-                    color: #a6adc8;
-                    font-size: 12px;
+                    color: Palette.text-secondary;
+                    font-size: 14px;
                     horizontal-alignment: center;
                 }
                 Rectangle { vertical-stretch: 1; }
@@ -425,53 +459,56 @@ export component AppWindow inherits Window {
 
             // Update available
             if root.current-screen == 12 : VerticalBox {
-                spacing: 10px;
+                spacing: 18px;
                 Text {
                     text: "A new version of ChatGPT is available.";
-                    color: #cdd6f4;
-                    font-size: 15px;
-                    font-weight: 600;
+                    color: Palette.text;
+                    font-size: 20px;
+                    font-weight: 400;
                 }
                 HorizontalBox {
                     padding: 0px;
-                    spacing: 16px;
+                    spacing: 22px;
                     VerticalBox {
-                        spacing: 2px;
+                        width: 150px;
+                        spacing: 6px;
                         padding: 0px;
-                        Text { text: "Installed"; color: #6c7086; font-size: 11px; }
+                        Text { text: "Installed"; color: Palette.text-tertiary; font-size: 13px; }
                         Text {
                             text: root.update-current-version;
-                            color: #a6adc8;
-                            font-size: 14px;
+                            color: Palette.text;
+                            font-size: 17px;
                         }
                     }
+                    Rectangle { width: 1px; background: Palette.divider; }
                     VerticalBox {
-                        spacing: 2px;
+                        width: 170px;
+                        spacing: 6px;
                         padding: 0px;
-                        Text { text: "Latest"; color: #6c7086; font-size: 11px; }
+                        Text { text: "Latest"; color: Palette.text-tertiary; font-size: 13px; }
                         Text {
                             text: root.update-latest-version;
-                            color: #a6e3a1;
-                            font-size: 14px;
+                            color: Palette.text;
+                            font-size: 17px;
                             font-weight: 600;
                         }
                     }
                     Rectangle {}
                 }
-                Rectangle { height: 1px; background: #313244; }
-                Text { text: "Don't update now?"; color: #6c7086; font-size: 11px; }
+                Rectangle { height: 1px; background: Palette.divider; }
+                Text { text: "Don't update now?"; color: Palette.text-secondary; font-size: 14px; font-weight: 600; }
                 HorizontalBox {
                     padding: 0px;
-                    spacing: 6px;
-                    DarkButton { text: "Remind next time"; clicked => { root.request-update(1); } }
-                    DarkButton { text: "Snooze 1 day"; clicked => { root.request-update(3); } }
-                    DarkButton { text: "Snooze 7 days"; clicked => { root.request-update(4); } }
+                    spacing: 12px;
+                    ChatButton { text: "Remind next time"; horizontal-stretch: 1; clicked => { root.request-update(1); } }
+                    ChatButton { text: "Snooze 1 day"; horizontal-stretch: 1; clicked => { root.request-update(3); } }
+                    ChatButton { text: "Snooze 7 days"; horizontal-stretch: 1; clicked => { root.request-update(4); } }
                 }
                 HorizontalBox {
                     padding: 0px;
-                    spacing: 6px;
-                    DarkButton { text: "Skip this version"; clicked => { root.request-update(2); } }
-                    DarkButton { text: "Never check again"; clicked => { root.request-update(5); } }
+                    spacing: 12px;
+                    ChatButton { text: "Skip this version"; horizontal-stretch: 1; clicked => { root.request-update(2); } }
+                    ChatButton { text: "Never check again"; horizontal-stretch: 1; clicked => { root.request-update(5); } }
                 }
             }
 
@@ -481,14 +518,14 @@ export component AppWindow inherits Window {
                 Rectangle { vertical-stretch: 1; }
                 Text {
                     text: "ChatGPT is up to date.";
-                    color: #a6e3a1;
+                    color: Palette.success;
                     font-size: 16px;
                     font-weight: 700;
                     horizontal-alignment: center;
                 }
                 Text {
                     text: "Version " + root.update-current-version;
-                    color: #a6adc8;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     horizontal-alignment: center;
                 }
@@ -500,19 +537,19 @@ export component AppWindow inherits Window {
                 spacing: 12px;
                 Text {
                     text: "Uninstall ChatGPT?";
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 16px;
                     font-weight: 700;
                 }
                 Text {
                     text: "This will remove the launcher, Start Menu shortcut, and all installed versions of ChatGPT.";
-                    color: #a6adc8;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
                 Text {
                     text: "Your ChatGPT logs and sign-in data will NOT be deleted.";
-                    color: #94e2d5;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
@@ -525,7 +562,7 @@ export component AppWindow inherits Window {
                 Rectangle { vertical-stretch: 1; }
                 Text {
                     text: root.progress-phase;
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 15px;
                     font-weight: 600;
                     horizontal-alignment: center;
@@ -533,7 +570,7 @@ export component AppWindow inherits Window {
                 Rectangle {
                     height: 12px;
                     border-radius: 6px;
-                    background: #313244;
+                    background: Palette.divider;
                     Rectangle {
                         x: 0;
                         y: 0;
@@ -542,12 +579,12 @@ export component AppWindow inherits Window {
                             ? parent.width * 0.3
                             : parent.width * root.progress-fraction;
                         border-radius: 6px;
-                        background: #f38ba8;
+                        background: Palette.danger;
                     }
                 }
                 Text {
                     text: root.progress-detail;
-                    color: #a6adc8;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     horizontal-alignment: center;
                     wrap: word-wrap;
@@ -561,14 +598,14 @@ export component AppWindow inherits Window {
                 Rectangle { vertical-stretch: 1; }
                 Text {
                     text: "ChatGPT has been uninstalled.";
-                    color: #a6e3a1;
+                    color: Palette.success;
                     font-size: 16px;
                     font-weight: 700;
                     horizontal-alignment: center;
                 }
                 Text {
                     text: root.uninstall-log-path == "" ? "" : "Log: " + root.uninstall-log-path;
-                    color: #6c7086;
+                    color: Palette.text-tertiary;
                     font-size: 10px;
                     horizontal-alignment: center;
                     wrap: word-wrap;
@@ -581,13 +618,13 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Text {
                     text: "Uninstall failed";
-                    color: #f38ba8;
+                    color: Palette.danger;
                     font-size: 16px;
                     font-weight: 700;
                 }
                 Text {
                     text: root.error-text;
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 12px;
                     wrap: word-wrap;
                 }
@@ -598,7 +635,7 @@ export component AppWindow inherits Window {
                 spacing: 10px;
                 Text {
                     text: "A new version of this launcher is available.";
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 15px;
                     font-weight: 600;
                 }
@@ -608,37 +645,37 @@ export component AppWindow inherits Window {
                     VerticalBox {
                         spacing: 2px;
                         padding: 0px;
-                        Text { text: "Installed"; color: #6c7086; font-size: 11px; }
+                        Text { text: "Installed"; color: Palette.text-tertiary; font-size: 11px; }
                         Text {
                             text: root.launcher-current-version;
-                            color: #a6adc8;
+                            color: Palette.text-secondary;
                             font-size: 14px;
                         }
                     }
                     VerticalBox {
                         spacing: 2px;
                         padding: 0px;
-                        Text { text: "Latest"; color: #6c7086; font-size: 11px; }
+                        Text { text: "Latest"; color: Palette.text-tertiary; font-size: 11px; }
                         Text {
                             text: root.launcher-latest-version;
-                            color: #a6e3a1;
+                            color: Palette.success;
                             font-size: 14px;
                             font-weight: 600;
                         }
                     }
                     Rectangle {}
                 }
-                Rectangle { height: 1px; background: #313244; }
+                Rectangle { height: 1px; background: Palette.divider; }
                 // Primary action row: update + view release notes.
                 HorizontalBox {
                     padding: 0px;
                     spacing: 6px;
-                    DarkButton {
+                    ChatButton {
                         text: "Update launcher";
                         primary: true;
                         clicked => { root.request-launcher-action(6); }
                     }
-                    DarkButton {
+                    ChatButton {
                         text: "Release notes";
                         clicked => { root.request-launcher-action(0); }
                     }
@@ -646,19 +683,19 @@ export component AppWindow inherits Window {
                 }
                 Rectangle { height: 4px; }
                 // Defer row(s): muted, secondary group.
-                Text { text: "Or defer"; color: #6c7086; font-size: 11px; }
+                Text { text: "Or defer"; color: Palette.text-tertiary; font-size: 11px; }
                 HorizontalBox {
                     padding: 0px;
                     spacing: 6px;
-                    DarkButton { text: "Remind next time";  clicked => { root.request-launcher-action(1); } }
-                    DarkButton { text: "Snooze 1 day";       clicked => { root.request-launcher-action(3); } }
-                    DarkButton { text: "Snooze 7 days";      clicked => { root.request-launcher-action(4); } }
+                    ChatButton { text: "Remind next time";  clicked => { root.request-launcher-action(1); } }
+                    ChatButton { text: "Snooze 1 day";       clicked => { root.request-launcher-action(3); } }
+                    ChatButton { text: "Snooze 7 days";      clicked => { root.request-launcher-action(4); } }
                 }
                 HorizontalBox {
                     padding: 0px;
                     spacing: 6px;
-                    DarkButton { text: "Skip this version";  clicked => { root.request-launcher-action(2); } }
-                    DarkButton { text: "Never";              clicked => { root.request-launcher-action(5); } }
+                    ChatButton { text: "Skip this version";  clicked => { root.request-launcher-action(2); } }
+                    ChatButton { text: "Never";              clicked => { root.request-launcher-action(5); } }
                 }
             }
 
@@ -668,20 +705,20 @@ export component AppWindow inherits Window {
                 Rectangle { vertical-stretch: 1; }
                 Text {
                     text: "Launcher updated.";
-                    color: #a6e3a1;
+                    color: Palette.success;
                     font-size: 18px;
                     font-weight: 700;
                     horizontal-alignment: center;
                 }
                 Text {
                     text: "Version " + root.launcher-latest-version;
-                    color: #cdd6f4;
+                    color: Palette.text;
                     font-size: 13px;
                     horizontal-alignment: center;
                 }
                 Text {
                     text: "Close this window to finish. The new launcher will be used the next time you start ChatGPT.";
-                    color: #a6adc8;
+                    color: Palette.text-secondary;
                     font-size: 12px;
                     horizontal-alignment: center;
                     wrap: word-wrap;
@@ -695,93 +732,93 @@ export component AppWindow inherits Window {
             padding: 0px;
             spacing: 8px;
             // Back
-            if root.current-screen >= 1 && root.current-screen <= 3 : DarkButton {
+            if root.current-screen >= 1 && root.current-screen <= 3 : ChatButton {
                 text: "Back";
                 clicked => { root.current-screen = root.current-screen - 1; }
             }
             Rectangle {} // spacer
 
-            if root.current-screen == 0 : DarkButton {
+            if root.current-screen == 0 : ChatButton {
                 text: "Cancel";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen <= 3 && root.current-screen != 0 : DarkButton {
+            if root.current-screen <= 3 && root.current-screen != 0 : ChatButton {
                 text: "Cancel";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 0 : DarkButton {
+            if root.current-screen == 0 : ChatButton {
                 text: "Next";
                 primary: true;
                 clicked => { root.current-screen = 1; }
             }
-            if root.current-screen == 1 : DarkButton {
+            if root.current-screen == 1 : ChatButton {
                 text: "Next";
                 primary: true;
                 clicked => { root.current-screen = 2; }
             }
-            if root.current-screen == 2 : DarkButton {
+            if root.current-screen == 2 : ChatButton {
                 text: "Next";
                 primary: true;
                 disabled: root.install-path == "";
                 clicked => { root.current-screen = 3; }
             }
-            if root.current-screen == 3 : DarkButton {
+            if root.current-screen == 3 : ChatButton {
                 text: "Install";
                 primary: true;
                 clicked => { root.current-screen = 4; root.request-install(); }
             }
-            if root.current-screen == 5 : DarkButton {
+            if root.current-screen == 5 : ChatButton {
                 text: "Launch ChatGPT";
                 primary: true;
                 clicked => { root.request-launch(); }
             }
-            if root.current-screen == 5 : DarkButton {
+            if root.current-screen == 5 : ChatButton {
                 text: "Close";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 6 : DarkButton {
+            if root.current-screen == 6 : ChatButton {
                 text: "Close";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 10 : DarkButton {
+            if root.current-screen == 10 : ChatButton {
                 text: "Check for updates";
                 clicked => { root.request-check-updates(); }
             }
-            if root.current-screen == 10 : DarkButton {
+            if root.current-screen == 10 : ChatButton {
                 text: "Close";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 12 : DarkButton {
+            if root.current-screen == 12 : ChatButton {
                 text: "Update now";
                 primary: true;
                 clicked => { root.request-update(0); }
             }
-            if root.current-screen == 13 : DarkButton {
+            if root.current-screen == 13 : ChatButton {
                 text: "Close";
                 clicked => { root.request-quit(); }
             }
             // Uninstall confirm
-            if root.current-screen == 20 : DarkButton {
+            if root.current-screen == 20 : ChatButton {
                 text: "Cancel";
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 20 : DarkButton {
+            if root.current-screen == 20 : ChatButton {
                 text: "Uninstall";
                 primary: true;
                 clicked => { root.current-screen = 21; root.request-uninstall-start(); }
             }
             // Uninstall complete / error
-            if root.current-screen == 22 : DarkButton {
+            if root.current-screen == 22 : ChatButton {
                 text: "Close";
                 primary: true;
                 clicked => { root.request-quit(); }
             }
-            if root.current-screen == 23 : DarkButton {
+            if root.current-screen == 23 : ChatButton {
                 text: "Close";
                 clicked => { root.request-quit(); }
             }
             // Launcher self-update done
-            if root.current-screen == 31 : DarkButton {
+            if root.current-screen == 31 : ChatButton {
                 text: "Close";
                 primary: true;
                 clicked => { root.request-quit(); }
@@ -793,7 +830,7 @@ export component AppWindow inherits Window {
         // shows on every screen (installer, proxy splash, uninstall).
         Text {
             text: "Made with Slint";
-            color: #45475a;
+            color: Palette.text-tertiary;
             font-size: 10px;
             horizontal-alignment: right;
         }

@@ -1090,17 +1090,17 @@ fn spawn_update_worker(ui_weak: slint::Weak<AppWindow>, cfg: Arc<Mutex<Config>>)
 /// Slint's default placement tends to land in the top-left corner on Windows,
 /// which looks unfinished. We compute center from `GetSystemMetrics(SM_CX/CYSCREEN)`
 /// scaled by `GetDpiForSystem()` since our AppWindow is declared in logical
-/// pixels (580x420) and the screen metrics come back in physical.
-/// Pre-show window setup: center and hide. Dark client area + dark title
-/// bar are handled before the window paints by the CBT hook from
+/// pixels (700x500) and the screen metrics come back in physical.
+/// Pre-show window setup: center and hide. The matching light client fill
+/// and title bar are handled before the window paints by the CBT hook from
 /// `dark_window::install`, which each AppWindow entry point invokes
 /// just before constructing the window.
 fn prepare_window(ui: &AppWindow) {
     use windows::Win32::UI::HiDpi::GetDpiForSystem;
     use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
 
-    const LOGICAL_W: f32 = 580.0;
-    const LOGICAL_H: f32 = 420.0;
+    const LOGICAL_W: f32 = 700.0;
+    const LOGICAL_H: f32 = 500.0;
 
     unsafe {
         let screen_w = GetSystemMetrics(SM_CXSCREEN);
@@ -1122,6 +1122,10 @@ fn show_when_ready(ui: &AppWindow) {
     let _ = slint::invoke_from_event_loop(move || {
         if let Some(ui) = weak.upgrade() {
             let _ = ui.show();
+            dark_window::refresh();
+            slint::Timer::single_shot(std::time::Duration::from_millis(100), || {
+                dark_window::refresh();
+            });
         }
     });
 }
