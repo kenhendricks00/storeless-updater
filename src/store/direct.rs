@@ -148,7 +148,8 @@ fn http_client() -> Result<Client> {
 
 fn download_client() -> Result<Client> {
     Ok(Client::builder()
-        .timeout(Duration::from_secs(120))
+        .timeout(Duration::from_secs(2 * 60 * 60))
+        .connect_timeout(Duration::from_secs(30))
         .redirect(reqwest::redirect::Policy::custom(|attempt| {
             if attempt.previous().len() >= 10 {
                 return attempt.error("too many package download redirects");
@@ -480,22 +481,40 @@ fn extract_file_urls(xml: &str) -> Vec<String> {
     let mut buf = Vec::new();
     let mut in_file_location = false;
     let mut in_url = false;
+    let mut current_url = String::new();
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(e)) => match local_name(e.name().as_ref()) {
                 b"FileLocation" => in_file_location = true,
-                b"Url" if in_file_location => in_url = true,
+                b"Url" if in_file_location => {
+                    current_url.clear();
+                    in_url = true;
+                }
                 _ => {}
             },
             Ok(Event::End(e)) => match local_name(e.name().as_ref()) {
                 b"FileLocation" => in_file_location = false,
-                b"Url" => in_url = false,
+                b"Url" if in_url => {
+                    if !current_url.is_empty() {
+                        urls.push(std::mem::take(&mut current_url));
+                    }
+                    in_url = false;
+                }
                 _ => {}
             },
             Ok(Event::Text(t)) if in_url => {
                 if let Ok(decoded) = t.xml_content(XmlVersion::Implicit1_0) {
                     if let Ok(unescaped) = escape::unescape(&decoded) {
-                        urls.push(unescaped.into_owned());
+                        current_url.push_str(&unescaped);
+                    }
+                }
+            }
+            Ok(Event::GeneralRef(reference)) if in_url => {
+                if let Ok(Some(ch)) = reference.resolve_char_ref() {
+                    current_url.push(ch);
+                } else if let Ok(name) = reference.decode() {
+                    if let Some(resolved) = escape::resolve_predefined_entity(&name) {
+                        current_url.push_str(resolved);
                     }
                 }
             }
@@ -560,5 +579,21 @@ mod tests {
         assert!(is_trusted_delivery_url(&trusted_https));
         assert!(is_trusted_delivery_url(&trusted_http));
         assert!(!is_trusted_delivery_url(&lookalike));
+    }
+
+    #[test]
+    fn file_url_parser_preserves_all_signed_query_parameters() {
+        let xml = r#"
+            <FileLocations>
+                <FileLocation>
+                    <Url>http://tlu.dl.delivery.mp.microsoft.com/files/example?P1=1&amp;P2=404&amp;P3=2&amp;P4=signature</Url>
+                </FileLocation>
+            </FileLocations>
+        "#;
+
+        assert_eq!(
+            extract_file_urls(xml),
+            vec!["http://tlu.dl.delivery.mp.microsoft.com/files/example?P1=1&P2=404&P3=2&P4=signature"]
+        );
     }
 }

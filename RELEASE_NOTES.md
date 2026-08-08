@@ -1,10 +1,12 @@
-# Storeless Updater v0.2.0
+# Storeless Updater v0.2.1
 
 Storeless Updater is an independent, unofficial launcher and updater for the ChatGPT desktop app on Windows. It provides a Store-free installation path while continuing to obtain the application package from Microsoft's own delivery service.
 
-## Renamed from BinaryFerry
+## Download reliability
 
-The project has been renamed from BinaryFerry to the clearer Storeless Updater. This release includes legacy `binaryferry.exe` assets solely so v0.1.0 installations can update into the new identity. New users should download `storeless-updater.exe`.
+- Fixes Direct downloads after XML entity references caused Microsoft's signed URL to be truncated at its first query parameter. The complete signed URL is now preserved, avoiding a 403 response and unnecessary Winget fallback.
+- Allows long package transfers to finish by replacing the previous two-minute total download timeout with a two-hour transfer window and a separate 30-second connection timeout.
+- Keeps the current security boundaries: redirects must remain on Microsoft's delivery domain, and the completed package still must pass signature, identity, publisher, architecture, and archive validation before extraction.
 
 ## Highlights
 
@@ -17,7 +19,7 @@ The project has been renamed from BinaryFerry to the clearer Storeless Updater. 
 ## Requirements and caveats
 
 - Windows 10 build 19041 or newer, x64 only.
-- The initial official application download is large and may take several minutes.
+- The initial official application download is roughly 667 MB. Its transfer speed depends on Microsoft's CDN and the user's network route.
 - The launcher is not code-signed, so Windows SmartScreen may display a warning for a newly downloaded release.
 - Some features that depend on Store package registration or OS-managed capabilities may behave differently when the application is run unpackaged.
 
