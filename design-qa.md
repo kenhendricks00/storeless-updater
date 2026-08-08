@@ -12,6 +12,7 @@ final result: passed
   - `work/design-qa/implementation-update-v2.png`
   - `work/design-qa/implementation-progress-v2.png`
   - `work/design-qa/implementation-done-v2.png`
+  - `work/design-qa/implementation-no-footer.png` (post-attribution-move verification)
 - Full-view comparison evidence:
   - `work/design-qa/comparison-update-client.png`
   - `work/design-qa/comparison-progress-client.png`
@@ -29,10 +30,10 @@ final result: passed
 ## Required fidelity surfaces
 
 - Fonts and typography: Segoe UI matches the reference's Windows-native sans-serif character. Title, status, body, version, and control weights preserve the same hierarchy without wrapping or truncation.
-- Spacing and layout rhythm: header padding, divider placement, progress centering, version columns, defer grid, success block, footer actions, and attribution align with the normalized references. The 700 x 500 viewport has no clipping or overlap in the three target states.
+- Spacing and layout rhythm: header padding, divider placement, progress centering, version columns, defer grid, success block, and footer actions align with the normalized references. The 700 x 500 viewport has no clipping or overlap in the three target states.
 - Colors and visual tokens: the implementation uses a white canvas, near-black text and controls, subtle neutral dividers, gray secondary text, and green success treatment matching the references. Text and controls retain strong contrast.
 - Image and asset fidelity: the references contain no photographic or illustrative assets. The only non-text mark is the success check, rendered with the Windows symbol font inside the matching green outline.
-- Copy and content: visible copy and version values match the references. The Windows-native close control replaces the mock's in-client close mark.
+- Copy and content: visible copy and version values match the references. The Windows-native close control replaces the mock's in-client close mark. The in-app Slint attribution shown in the reference was intentionally moved to the public project page beside the download instructions.
 - Interaction and accessibility: all actions remain native Slint touch areas or standard widgets, with at least 44-pixel button height, hover/pressed states, clear text labels, and no color-only action labels.
 
 ## Findings

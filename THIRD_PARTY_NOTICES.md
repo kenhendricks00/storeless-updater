@@ -8,7 +8,7 @@ The upstream project states that its Microsoft Store catalog and Windows Update 
 
 ## Slint
 
-The interface uses [Slint](https://slint.dev/) under the Slint Royalty-free License 2.0. The required "Made with Slint" attribution remains visible in the application window.
+The interface uses [Slint](https://slint.dev/) under the [Slint Royalty-free License 2.0](https://slint.dev/agreements/slint-royalty-free-license.pdf). The required Slint attribution badge is displayed on the public project page beside the download instructions.
 
 ## Product ownership
 
