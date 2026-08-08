@@ -6,6 +6,8 @@ Storeless Updater is an independent, unofficial launcher and updater for the Cha
 
 It does not redistribute ChatGPT, modify the ChatGPT payload, bypass sign-in, or remove OpenAI's normal terms and account requirements.
 
+![Storeless Updater welcome screen](docs/images/storeless-updater.png)
+
 [![Made with Slint](https://slint.dev/logo/MadeWithSlint-logo-light.svg)](https://slint.dev/)
 
 ## Quick start
