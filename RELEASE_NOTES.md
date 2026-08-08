@@ -1,12 +1,11 @@
-# Storeless Updater v0.2.1
+# Storeless Updater v0.2.2
 
 Storeless Updater is an independent, unofficial launcher and updater for the ChatGPT desktop app on Windows. It provides a Store-free installation path while continuing to obtain the application package from Microsoft's own delivery service.
 
-## Download reliability
+## Interaction polish
 
-- Fixes Direct downloads after XML entity references caused Microsoft's signed URL to be truncated at its first query parameter. The complete signed URL is now preserved, avoiding a 403 response and unnecessary Winget fallback.
-- Allows long package transfers to finish by replacing the previous two-minute total download timeout with a two-hour transfer window and a separate 30-second connection timeout.
-- Keeps the current security boundaries: redirects must remain on Microsoft's delivery domain, and the completed package still must pass signature, identity, publisher, architecture, and archive validation before extraction.
+- Buttons now display the Windows hand pointer on hover throughout the installer, update prompts, completion screens, and uninstall flow.
+- Install-mode cards use the same pointer treatment so every app-owned clickable surface gives consistent hover feedback.
 
 ## Highlights
 

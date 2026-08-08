@@ -64,6 +64,7 @@ component ChatButton inherits Rectangle {
     }
     ta := TouchArea {
         enabled: !root.disabled;
+        mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
 }
@@ -97,6 +98,7 @@ component ModeCard inherits Rectangle {
         }
     }
     ta := TouchArea {
+        mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
 }

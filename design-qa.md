@@ -34,7 +34,7 @@ final result: passed
 - Colors and visual tokens: the implementation uses a white canvas, near-black text and controls, subtle neutral dividers, gray secondary text, and green success treatment matching the references. Text and controls retain strong contrast.
 - Image and asset fidelity: the references contain no photographic or illustrative assets. The only non-text mark is the success check, rendered with the Windows symbol font inside the matching green outline.
 - Copy and content: visible copy and version values match the references. The Windows-native close control replaces the mock's in-client close mark. The in-app Slint attribution shown in the reference was intentionally moved to the public project page beside the download instructions.
-- Interaction and accessibility: all actions remain native Slint touch areas or standard widgets, with at least 44-pixel button height, hover/pressed states, clear text labels, and no color-only action labels.
+- Interaction and accessibility: all actions remain native Slint touch areas or standard widgets, with at least 44-pixel button height, hover/pressed states, a hand pointer for app-owned clickable surfaces, clear text labels, and no color-only action labels.
 
 ## Findings
 
