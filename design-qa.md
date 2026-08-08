@@ -4,58 +4,50 @@ final result: passed
 
 ## Comparison target
 
-- Source visual truth:
-  - Update prompt: `C:\Users\Kenneth\AppData\Local\Temp\codex-clipboard-6aaa5ccf-7ad7-4d01-8921-d03a05fe5d6a.png`
-  - Progress: `C:\Users\Kenneth\AppData\Local\Temp\codex-clipboard-25cfafc6-8ce3-415a-b2b9-65b5947197a6.png`
-  - Completion: `C:\Users\Kenneth\AppData\Local\Temp\codex-clipboard-fe1d4988-517c-49ac-b033-115d5d9dfe02.png`
-- Rendered implementation:
-  - `work/design-qa/implementation-update-v2.png`
-  - `work/design-qa/implementation-progress-v2.png`
-  - `work/design-qa/implementation-done-v2.png`
-  - `work/design-qa/implementation-no-footer.png` (post-attribution-move verification)
-- Full-view comparison evidence:
-  - `work/design-qa/comparison-update-client.png`
-  - `work/design-qa/comparison-progress-client.png`
-  - `work/design-qa/comparison-done-client.png`
+- Source visual truth: `C:\Users\Kenneth\AppData\Local\Temp\codex-clipboard-27fb5356-1cfd-47dd-9d3c-49efbfe60501.png`
+- Rendered implementation: `work/design-qa/implementation-pill-icon-v0.2.3.png`
+- Embedded executable icon: `work/design-qa/embedded-launcher-icon-v0.2.3.png`
+- Combined comparison evidence: `work/design-qa/comparison-pill-icon-v0.2.3.png`
+- State: the source shows progress, completion, and update-available states; the native capture shows the welcome state. The requested action geometry is state-independent because every app-owned action uses the shared `ChatButton` component.
 
 ## Viewport and normalization
 
+- Source pixels: 1478 x 1065.
 - Slint viewport: 700 x 500 logical pixels at a 1.0 application scale.
-- Captured native window: 716 x 539 pixels, including Windows borders and caption.
-- App-owned client comparison: the 31-pixel native caption was excluded; the remaining client content was compared at 716 pixels wide.
-- Source pixels: update 1480 x 1065, progress 1058 x 784, completion 1012 x 724.
-- Density normalization: each source was downsampled with high-quality bicubic interpolation to the implementation comparison width. The native Windows caption was treated as platform chrome, not app-owned content.
-- States: update available, downloading at 38 / 667 MB, and installation complete at version 26.803.5235.0.
+- Captured native window: 716 x 539 pixels, including the Windows border and caption.
+- Implementation icon extraction: 32 x 32 pixels from the release executable's associated icon resource.
+- Density normalization: the source was downsampled to 898 pixels wide for the combined full-view comparison. No geometry measurements were taken across unrelated screen states.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: Segoe UI matches the reference's Windows-native sans-serif character. Title, status, body, version, and control weights preserve the same hierarchy without wrapping or truncation.
-- Spacing and layout rhythm: header padding, divider placement, progress centering, version columns, defer grid, success block, and footer actions align with the normalized references. The 700 x 500 viewport has no clipping or overlap in the three target states.
-- Colors and visual tokens: the implementation uses a white canvas, near-black text and controls, subtle neutral dividers, gray secondary text, and green success treatment matching the references. Text and controls retain strong contrast.
-- Image and asset fidelity: the references contain no photographic or illustrative assets. The only non-text mark is the success check, rendered with the Windows symbol font inside the matching green outline.
-- Copy and content: visible copy and version values match the references. The Windows-native close control replaces the mock's in-client close mark. The in-app Slint attribution shown in the reference was intentionally moved to the public project page beside the download instructions.
-- Interaction and accessibility: all actions remain native Slint touch areas or standard widgets, with at least 44-pixel button height, hover/pressed states, a hand pointer for app-owned clickable surfaces, clear text labels, and no color-only action labels.
+- Fonts and typography: unchanged from the previously verified Segoe UI treatment; no new wrapping, clipping, or hierarchy changes are visible.
+- Spacing and layout rhythm: the 44-pixel buttons now use a 22-pixel radius, producing the full pill silhouette shown by the reference. Existing padding, alignment, and action spacing remain unchanged.
+- Colors and visual tokens: the black control fill, white action labels, white canvas, and neutral dividers remain consistent with the reference.
+- Image and asset fidelity: the release executable contains the official Lucide Store paths on a black rounded tile. The extracted icon is crisp and recognizable at 32 x 32 pixels.
+- Copy and content: no visible copy changed.
+- Interaction and accessibility: the shared button remains at least 44 pixels tall and retains its hover, pressed, disabled, and pointer-cursor behavior. No action callbacks changed.
 
 ## Findings
 
-No actionable P0, P1, or P2 differences remain in app-owned content.
+No actionable P0, P1, or P2 differences remain for the requested pill-button and application-icon changes.
 
-- Expected platform difference: the production app retains the standard Windows caption for native move, minimize, and close behavior. It is excluded from the client-only comparison because the visual references depict custom frameless chrome.
-- P3: exact font antialiasing varies slightly between the raster references and the live Windows renderer.
+- Expected state difference: the full implementation capture uses the welcome screen instead of the three states in the collage. This does not affect the comparison of `ChatButton` geometry because all of those actions render through the same component.
+- P3: exact edge antialiasing differs slightly between the raster reference and the live Slint renderer.
 
-Focused region comparisons were not needed because all controls, version text, progress details, and the success icon are clearly readable at the full comparison width.
+Focused comparison was used for the action silhouette and embedded icon. The combined image keeps both full views readable, while the separately extracted icon verifies the actual PE resource rather than only the SVG source.
 
 ## Comparison history
 
-1. The first completion capture rendered the checkmark as a missing-glyph box. The success mark was assigned to Segoe UI Symbol, rebuilt, and re-captured; `comparison-done-client.png` shows the corrected checkmark.
-2. The initial side-by-side images included the native Windows caption, which distorted height and chrome comparisons. The final evidence crops only the app-owned client and normalizes all three sources to the same width.
+1. The previous implementation used a 9-pixel button radius, which looked rounded but not pill-shaped.
+2. The shared radius was changed to half the 44-pixel button height and the native release build was recaptured.
+3. The first automated window probe found Slint's hidden 16 x 16 helper window. The final capture enumerated process windows and selected the visible 716 x 539 application window.
+4. The release executable's associated icon was extracted and inspected to verify that the multi-resolution Lucide Store ICO was embedded successfully.
 
 ## Implementation checklist
 
-- [x] Light ChatGPT-like palette and typography
-- [x] Update prompt version hierarchy and defer-action grid
-- [x] Black rounded buttons with hover and pressed states
-- [x] Neutral progress bar with black fill and centered detail
-- [x] Green success state with correct symbol rendering
-- [x] Consistent layout applied to the remaining wizard states
-- [x] Native light client-area initialization and matching Windows border colors
+- [x] Full pill geometry for all shared action buttons
+- [x] Existing hover, pressed, disabled, pointer, and callback behavior preserved
+- [x] Official Lucide Store paths used for the application icon
+- [x] Multi-resolution Windows ICO embedded in the release executable
+- [x] Lucide license attribution added
+- [x] Native release build captured and compared with the visual target

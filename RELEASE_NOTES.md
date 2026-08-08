@@ -1,11 +1,12 @@
-# Storeless Updater v0.2.2
+# Storeless Updater v0.2.3
 
 Storeless Updater is an independent, unofficial launcher and updater for the ChatGPT desktop app on Windows. It provides a Store-free installation path while continuing to obtain the application package from Microsoft's own delivery service.
 
-## Interaction polish
+## Visual polish
 
-- Buttons now display the Windows hand pointer on hover throughout the installer, update prompts, completion screens, and uninstall flow.
-- Install-mode cards use the same pointer treatment so every app-owned clickable surface gives consistent hover feedback.
+- Action buttons now use a full pill shape throughout the installer, update prompts, completion screens, and uninstall flow.
+- The launcher executable now uses a black-and-white Lucide Store application icon.
+- Interactive controls continue to display the Windows hand pointer on hover.
 
 ## Highlights
 

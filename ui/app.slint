@@ -42,7 +42,8 @@ component ChatButton inherits Rectangle {
     callback clicked;
     height: 44px;
     min-width: 104px;
-    border-radius: 9px;
+    // Match the ChatGPT action style: a full pill at the standard 44px height.
+    border-radius: 22px;
     background: ta.pressed && !root.disabled
         ? Palette.control-pressed
         : (ta.has-hover && !root.disabled ? Palette.control-hover : Palette.control);
